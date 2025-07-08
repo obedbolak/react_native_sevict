@@ -1,62 +1,58 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from "expo-font";
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React, { createContext, useContext, useState } from 'react';
-import { useColorScheme } from 'react-native';
-type ThemeContextType = {
-  themeMode: string;
-  toggleTheme: () => void;
-};
+import { useCallback, useEffect } from 'react';
 
-const ThemeContext = createContext<ThemeContextType>({
-  themeMode: 'system',
-  toggleTheme: () => {},
-});
-
-export const useTheme = () => useContext(ThemeContext);
+// Prevent the splash screen from auto-hiding
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const systemColorScheme = useColorScheme();
-  const [themeMode, setThemeMode] = useState('system'); // 'light', 'dark', 'system'
-  
-  const [loaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  const getCurrentTheme = () => {
-    if (themeMode === 'system') {
-      return systemColorScheme === 'dark' ? DarkTheme : DefaultTheme;
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded || fontError) {
+      await SplashScreen.hideAsync();
     }
-    return themeMode === 'dark' ? DarkTheme : DefaultTheme;
-  };
+  }, [fontsLoaded, fontError]);
 
-  const toggleTheme = () => {
-    const modes = ['system', 'light', 'dark'];
-    const currentIndex = modes.indexOf(themeMode);
-    const nextMode = modes[(currentIndex + 1) % modes.length];
-    setThemeMode(nextMode);
-    // Optionally save to AsyncStorage
-    AsyncStorage.setItem('themeMode', nextMode);
-  };
+  useEffect(() => {
+    onLayoutRootView();
+  }, [onLayoutRootView]);
 
-  if (!loaded) {
+  // Don't render anything until fonts are loaded
+  if (!fontsLoaded && !fontError) {
     return null;
   }
 
   return (
-    <ThemeContext.Provider value={{ themeMode, toggleTheme }}>
-      <ThemeProvider value={getCurrentTheme()}>
-        <Stack>
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="dashboard" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </ThemeContext.Provider>
+    <>
+      <StatusBar style="dark" />
+      <Stack>
+        <Stack.Screen 
+          name="(auth)" 
+          options={{ 
+            headerShown: false,
+            animation: 'fade',
+          }} 
+        />
+        <Stack.Screen 
+          name="dashboard" 
+          options={{ 
+            headerShown: false,
+            animation: 'fade',
+          }} 
+        />
+        <Stack.Screen 
+          name="+not-found" 
+          options={{
+            title: 'Not Found',
+            animation: 'fade',
+          }}
+        />
+      </Stack>
+    </>
   );
 }
-
-

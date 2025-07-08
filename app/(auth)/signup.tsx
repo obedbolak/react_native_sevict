@@ -90,6 +90,7 @@ const [acceptTerms, setAcceptTerms] = useState(false);
                   onChangeText={setUsername}
                   style={styles.input}
                   autoCapitalize="none"
+                  placeholderTextColor={"grey"}
                 />
                 <TextInput
                   placeholder="Enter Email"
@@ -97,6 +98,7 @@ const [acceptTerms, setAcceptTerms] = useState(false);
                   onChangeText={setEmail}
                   style={styles.input}
                   autoCapitalize="none"
+                  placeholderTextColor={"grey"}
                 />
                   <View style={styles.passwordContainer}>
                     <TextInput
@@ -106,6 +108,7 @@ const [acceptTerms, setAcceptTerms] = useState(false);
                       onChangeText={setPassword}
                       style={styles.passwordInput}
                       autoCapitalize="none"
+                      placeholderTextColor={"grey"}
                     />
                     <TouchableOpacity
                       onPress={() => setShowPassword(!showPassword)}
@@ -126,6 +129,7 @@ const [acceptTerms, setAcceptTerms] = useState(false);
                       onChangeText={setConfirmPassword}
                       style={styles.passwordInput}
                       autoCapitalize="none"
+                      placeholderTextColor={"grey"}
                     />
                     <TouchableOpacity
                       onPress={() => setShowPassword(!showPassword)}
@@ -155,10 +159,10 @@ const [acceptTerms, setAcceptTerms] = useState(false);
                 <View style={styles.termsContainer}>
                   <TouchableOpacity
                     onPress={() => setAcceptTerms(!acceptTerms)}
-                    style={styles.checkbox}
+                    style={[styles.checkboxContainer, acceptTerms && styles.checked]} // Apply checked style if acceptTerms is true (checkedstyles.checkbox}
                   >
                     {acceptTerms ? (
-                      <MaterialIcons name="check" size={20} color="black" />
+                      <MaterialIcons name="check" size={20} color="white" />
                     ) : null}
                   </TouchableOpacity>
                   
@@ -219,12 +223,27 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
     paddingVertical: 16,
+    paddingBottom: 32,
 
   },
   logo: {
     width: 120,
     height: 120,
     resizeMode: 'contain',
+  },
+  checkboxContainer: {
+    width: 24,
+    height: 24,
+    backgroundColor: '#fff',
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checked: {
+    backgroundColor: '#007bff',
+    borderColor: '#007bff',
   },
   // Container 2: Form Inputs
   container2: {
@@ -320,6 +339,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 16,
     backgroundColor: '#fff',
+    color: '#333',
     // Remove marginBottom here, handled by container
   },
   eyeButton: {

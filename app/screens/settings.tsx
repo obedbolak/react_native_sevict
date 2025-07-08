@@ -1,4 +1,3 @@
-import { useTheme } from '@/app/_layout';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
@@ -6,7 +5,6 @@ import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 're
 
 
 const Settings = () => {
-    const { themeMode, toggleTheme } = useTheme();
 
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);

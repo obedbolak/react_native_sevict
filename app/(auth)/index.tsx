@@ -87,6 +87,7 @@ const index = () => {
                   onChangeText={setUsername}
                   style={styles.input}
                   autoCapitalize="none"
+                  placeholderTextColor={'grey'}
                 />
               <View style={styles.passwordContainer}>
                     <TextInput
@@ -96,12 +97,13 @@ const index = () => {
                       onChangeText={setPassword}
                       style={styles.passwordInput}
                       autoCapitalize="none"
+                      placeholderTextColor={'grey'}
                     />
                     <TouchableOpacity
                       onPress={() => setShowPassword(!showPassword)}
                       style={styles.eyeButton}
                     >
-                      {showPassword ? (
+                      {!showPassword ? (
                         <MaterialIcons name="visibility" size={20} color="black" />
                       ) : (
                         <MaterialIcons name="visibility-off" size={20} color="black" />
@@ -271,6 +273,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 16,
     backgroundColor: '#fff',
+    color: '#333',
     // Remove marginBottom here, handled by container
   },
   eyeButton: {

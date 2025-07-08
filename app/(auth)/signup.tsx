@@ -197,18 +197,10 @@ const [acceptTerms, setAcceptTerms] = useState(false);
 export default singup;
 
 const styles = StyleSheet.create({
-    checkbox: {
-      width: 20,
-      height: 20,
-      borderRadius: 4,
-      borderWidth: 2,
-      borderColor: '#ccc',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
+  
   safeArea: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: 'black',
   },
   keyboardAvoiding: {
     flex: 1,

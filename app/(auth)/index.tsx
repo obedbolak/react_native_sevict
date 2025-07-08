@@ -158,7 +158,8 @@ export default index;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f5f5f5',
+
   },
   keyboardAvoiding: {
     flex: 1,

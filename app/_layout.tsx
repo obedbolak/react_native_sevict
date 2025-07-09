@@ -29,7 +29,7 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style="auto" />
       <Stack>
         <Stack.Screen 
           name="(auth)" 

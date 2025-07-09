@@ -3,12 +3,13 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AddPost from "../screens/addPost";
 import Home from "../screens/home";
 import Profile from "../screens/profile";
 import Search from "../screens/search";
 import Settings from "../screens/settings";
 
-type Tabs = "home" | "search" | "profile" | "settings";
+type Tabs = "home" | "search" | "profile" | "settings" | "addPost";
 const index = () => {
   const [activeTab, setActiveTab] = useState<Tabs>("home")
   return (
@@ -34,6 +35,7 @@ const index = () => {
       {activeTab === "search" && <Search />}
       {activeTab === "profile" && <Profile />}
       {activeTab === "settings" && <Settings />}
+      {activeTab === "addPost" && <AddPost />}
       
 
       {/* Bottom Navigation */}
@@ -77,7 +79,7 @@ const index = () => {
     </TouchableOpacity>
   </View>
 
-  <TouchableOpacity style={styles.addButton}>
+  <TouchableOpacity style={styles.addButton } onPress={() => setActiveTab("addPost")}>
     <MaterialIcons name="add-circle" size={54} color="#2563eb" />
   </TouchableOpacity>
 

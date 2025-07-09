@@ -76,3 +76,12 @@ export const Colors = {
     inputBorder: '#3d4042',
   },
 };
+
+const lightTheme = 'light';
+
+export { lightTheme };
+
+
+const darkTheme = 'dark';
+
+export { darkTheme };

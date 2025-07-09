@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+import { useTheme } from "@/context/themeContext";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -18,6 +19,7 @@ import {
 } from 'react-native';
 
 const SignupScreen = () => {
+  const { isDarkMode, colors, toggleTheme } = useTheme();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -30,7 +32,7 @@ const SignupScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorTimeout, setErrorTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
-
+ 
   // Clear timeout when component unmounts
   useEffect(() => {
     return () => {
@@ -91,7 +93,8 @@ const SignupScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: isDarkMode ? colors.background : colors.background }]
+    }>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoiding}
@@ -112,6 +115,14 @@ const SignupScreen = () => {
             <View style={styles.container2}>
               <View style={styles.formContainer}>
                 <View style={styles.headerContainer}>
+                  <TouchableOpacity onPress={() => toggleTheme}>
+                  {isDarkMode ? (
+                    <MaterialIcons name="light-mode" size={54} color="white" />
+                  ) : (
+                    <MaterialIcons name="dark-mode" size={54} color="black" />
+                  )
+                  } 
+                  </TouchableOpacity>
                   <Text style={styles.title}>Create Account!</Text>
                   <Text style={styles.subtitle}>Please Create Your Account</Text>
                 </View>
@@ -275,8 +286,7 @@ const SignupScreen = () => {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
+    flex: 1
   },
   keyboardAvoiding: {
     flex: 1,

@@ -16,14 +16,20 @@ import {
   View
 } from 'react-native';
 import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../context/themeContext';
+
+   
+
 
 const LoginScreen = () => {
+  const { isDarkMode, colors, toggleTheme } = useTheme();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
    const [errorTimeout, setErrorTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+   
   
     // Clear timeout when component unmounts
     useEffect(() => {
@@ -67,7 +73,7 @@ const LoginScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: isDarkMode ? colors.background : colors.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoiding}
@@ -88,6 +94,14 @@ const LoginScreen = () => {
             <View style={styles.container2}>
               <View style={styles.formContainer}>
                 <View style={styles.headerContainer}>
+                  <TouchableOpacity onPress={() => toggleTheme()}>
+                    <MaterialIcons 
+                      name={isDarkMode ? "dark-mode" : "light-mode"} 
+                      size={24} 
+                      color={Colors.light.icon} 
+                      accessibilityLabel={isDarkMode ? "Light mode icon" : "Dark mode icon"}
+                    />
+                  </TouchableOpacity>
                   <Text style={styles.title}>Welcome Back!</Text>
                   <Text style={styles.subtitle}>Sign in to continue with the App</Text>
                 </View>
@@ -210,8 +224,7 @@ const LoginScreen = () => {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
+    flex: 1
   },
   keyboardAvoiding: {
     flex: 1,

@@ -1,8 +1,191 @@
+import { useTheme } from '@/context/themeContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from 'react';
 import { ImageBackground, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const Home = () => {
+  const {colors} = useTheme();
+
+  const styles = StyleSheet.create({
+  contentContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+    paddingHorizontal: 5,
+    paddingTop: 20,
+  },
+  headerContainer: {
+    marginBottom: 20,
+  },
+  welcomeText: {
+    fontSize: 18,
+    color: colors.text,
+  },
+  schoolName: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  searchContainer: {
+    marginBottom: 20,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderRadius: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 16,
+    color: colors.inputBackground,
+  },
+  bannerContainer: {
+    height: 180,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 25,
+  },
+  bannerImage: {
+    height: '100%',
+    width: '100%',
+    justifyContent: 'center',
+  },
+  bannerOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 20,
+    height: '100%',
+    justifyContent: 'center',
+  },
+  bannerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 5,
+  },
+  bannerSubtitle: {
+    fontSize: 16,
+    color: 'white',
+    marginBottom: 15,
+  },
+  bannerButton: {
+    backgroundColor: '#3a86ff',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  bannerButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  sectionContainer: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#212529',
+  },
+  viewAllText: {
+    color: '#3a86ff',
+    fontWeight: '500',
+  },
+  courseIconsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    width: 70,
+  },
+  iconBackground: {
+    backgroundColor: '#e9f2ff',
+    width: 60,
+    height: 60,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  iconLabel: {
+    fontSize: 13,
+    textAlign: 'center',
+    color: '#495057',
+  },
+  workshopCard: {
+    height: 150,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  workshopImage: {
+    height: '100%',
+    width: '100%',
+  },
+  workshopOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    padding: 15,
+    height: '100%',
+    justifyContent: 'flex-end',
+  },
+  workshopDate: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  workshopTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 3,
+  },
+  workshopInstructor: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+  },
+  newsCard: {
+    paddingVertical: 10,
+  },
+  newsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#212529',
+    marginBottom: 5,
+  },
+  newsExcerpt: {
+    fontSize: 14,
+    color: '#6c757d',
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  newsDate: {
+    fontSize: 12,
+    color: '#adb5bd',
+  },
+});
   return (
     <View style={styles.contentContainer}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -124,183 +307,3 @@ const Home = () => {
 
 export default Home;
 
-const styles = StyleSheet.create({
-  contentContainer: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-    paddingHorizontal: 5,
-    paddingTop: 20,
-  },
-  headerContainer: {
-    marginBottom: 20,
-  },
-  welcomeText: {
-    fontSize: 18,
-    color: '#6c757d',
-  },
-  schoolName: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#212529',
-  },
-  searchContainer: {
-    marginBottom: 20,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderRadius: 10,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 16,
-    color: 'black',
-  },
-  bannerContainer: {
-    height: 180,
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: 25,
-  },
-  bannerImage: {
-    height: '100%',
-    width: '100%',
-    justifyContent: 'center',
-  },
-  bannerOverlay: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 20,
-    height: '100%',
-    justifyContent: 'center',
-  },
-  bannerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 5,
-  },
-  bannerSubtitle: {
-    fontSize: 16,
-    color: 'white',
-    marginBottom: 15,
-  },
-  bannerButton: {
-    backgroundColor: '#3a86ff',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-  },
-  bannerButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  sectionContainer: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 20,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#212529',
-  },
-  viewAllText: {
-    color: '#3a86ff',
-    fontWeight: '500',
-  },
-  courseIconsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-  },
-  iconContainer: {
-    alignItems: 'center',
-    width: 70,
-  },
-  iconBackground: {
-    backgroundColor: '#e9f2ff',
-    width: 60,
-    height: 60,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  iconLabel: {
-    fontSize: 13,
-    textAlign: 'center',
-    color: '#495057',
-  },
-  workshopCard: {
-    height: 150,
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  workshopImage: {
-    height: '100%',
-    width: '100%',
-  },
-  workshopOverlay: {
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    padding: 15,
-    height: '100%',
-    justifyContent: 'flex-end',
-  },
-  workshopDate: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  workshopTitle: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 3,
-  },
-  workshopInstructor: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 14,
-  },
-  newsCard: {
-    paddingVertical: 10,
-  },
-  newsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#212529',
-    marginBottom: 5,
-  },
-  newsExcerpt: {
-    fontSize: 14,
-    color: '#6c757d',
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  newsDate: {
-    fontSize: 12,
-    color: '#adb5bd',
-  },
-});

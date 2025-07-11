@@ -1,4 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import axios from 'axios';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -15,14 +16,14 @@ import {
   TouchableWithoutFeedback,
   View
 } from 'react-native';
-import { Colors } from '../../constants/Colors';
 import { useTheme } from '../../context/themeContext';
 
    
 
 
 const LoginScreen = () => {
-  const { isDarkMode, colors, toggleTheme } = useTheme();
+  const { isDarkMode, toggleTheme, colors } = useTheme();
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -38,42 +39,203 @@ const LoginScreen = () => {
       };
     }, [errorTimeout]);
 
-  const handleLogin = () => {
-    Keyboard.dismiss();
+ const handleLogin = async () => {
+  Keyboard.dismiss();
 
-    // Clear any existing timeout
-    if (errorTimeout) clearTimeout(errorTimeout);
+  // Clear any existing timeout
+  if (errorTimeout) clearTimeout(errorTimeout);
 
-    if (!username.trim() && !password.trim()) {
-      setError('All fields are required');
-      setErrorTimeout(setTimeout(() => setError(''), 5000));
-      return;
-    } else if (!password.trim()) {
-      setError('Password is required');
-      setErrorTimeout(setTimeout(() => setError(''), 5000));
-      return;
-    } else if (!username.trim()) {
-      setError('Username is required');
-      setErrorTimeout(setTimeout(() => setError(''), 5000));
-      return;
-    } else if (password !== '12345678') {
-      setError('Invalid credentials');
-      setErrorTimeout(setTimeout(() => setError(''), 5000));
-      return;
-    } else if (username !== 'laura') {
-      setError("Invalid username");
-      setErrorTimeout(setTimeout(() => setError(''), 5000));
-      return;
+  if (!username.trim() || !password.trim()) {
+    setError('All fields are required');
+    setErrorTimeout(setTimeout(() => setError(''), 5000));
+    return;
+  }
+
+  setIsLoading(true);
+  
+  try {
+    const response = await axios.post('http://10.0.2.2:5000/users/login', {
+      username: username.trim(),
+      password: password.trim()
+    });
+
+    if (response.data.success) {
+      router.push('/dashboard');
     } else {
-      setIsLoading(true);
-      setTimeout(() => {
-        router.replace("/dashboard");
-      }, 1000);
+      setError('Invalid credentials');
     }
-  };
+  } catch (error) {
+    console.error('Login error:', error);
+    
+    // Handle different error types
+    if (error) {
+      // Server responded with a status code outside 2xx
+      setError( 'Login failed');
+    } else if (error) {
+      // Request was made but no response received
+      setError('Network error - please check your connection');
+    } else {
+      // Something else happened
+      setError('An unexpected error occurred');
+    }
+    
+    setErrorTimeout(setTimeout(() => setError(''), 5000));
+  } finally {
+    setIsLoading(false);
+  }
+};
+  const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  keyboardAvoiding: {
+    flex: 1,
+  },
+  mainContainer: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  // Logo Section
+  container1: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: 16,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    resizeMode: 'contain',
+  },
+  // Form Section
+  container2: {
+    flex: 1.2,
+    justifyContent: 'center',
+  },
+  formContainer: {
+    width: '100%',
+  },
+  headerContainer: {
+    marginBottom: 32,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: colors.subtext,
+  },
+  inputContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    position: 'relative',
+  },
+  inputIcon: {
+    position: 'absolute',
+    left: 16,
+    zIndex: 1,
+  },
+  input: {
+    width: '100%',
+    height: 50,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingLeft: 48,
+    backgroundColor: colors.inputBackground,
+    color: colors.text,
+    fontSize: 16,
+  },
+  passwordInput: {
+    width: '100%',
+    height: 50,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingLeft: 48,
+    paddingRight: 48,
+    backgroundColor: colors.inputBackground,
+    color: colors.text,
+    fontSize: 16,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 16,
+    padding: 10,
+  },
+  loginButton: {
+    width: '100%',
+    height: 50,
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  loginButtonText: {
+    color: colors.buttonText,
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 14,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  // Footer Section
+  container3: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingBottom: 24,
+  },
+  socialContainer: {
+    marginBottom: 24,
+  },
+  socialText: {
+    fontSize: 16,
+    color: colors.subtext,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  socialIconsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 24,
+  },
+  socialIcon: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
+  },
+  footerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  footerText: {
+    color: colors.text,
+    fontSize: 16,
+  },
+  footerLink: {
+    color: colors.primary,
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 6,
+  },
+});
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: isDarkMode ? colors.background : colors.background }]}>
+    <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoiding}
@@ -98,7 +260,7 @@ const LoginScreen = () => {
                     <MaterialIcons 
                       name={isDarkMode ? "dark-mode" : "light-mode"} 
                       size={24} 
-                      color={Colors.light.icon} 
+                      color={colors.icon} 
                       accessibilityLabel={isDarkMode ? "Light mode icon" : "Dark mode icon"}
                     />
                   </TouchableOpacity>
@@ -111,7 +273,7 @@ const LoginScreen = () => {
                   <MaterialIcons 
                     name="email" 
                     size={20} 
-                    color={Colors.light.icon} 
+                    color={colors.icon} 
                     style={styles.inputIcon}
                     accessibilityLabel="Email icon"
                   />
@@ -124,7 +286,7 @@ const LoginScreen = () => {
                     }}
                     style={styles.input}
                     autoCapitalize="none"
-                    placeholderTextColor={Colors.light.placeholder}
+                    placeholderTextColor={colors.placeholder}
                     keyboardType="email-address"
                     accessibilityLabel="Email input"
                     autoComplete="email"
@@ -136,7 +298,7 @@ const LoginScreen = () => {
                   <MaterialIcons 
                     name="lock" 
                     size={20} 
-                    color={Colors.light.icon} 
+                    color={colors.icon} 
                     style={styles.inputIcon}
                     accessibilityLabel="Password icon"
                   />
@@ -147,7 +309,7 @@ const LoginScreen = () => {
                     onChangeText={setPassword}
                     style={styles.passwordInput}
                     autoCapitalize="none"
-                    placeholderTextColor={Colors.light.placeholder}
+                    placeholderTextColor={colors.placeholder}
                     accessibilityLabel="Password input"
                     autoComplete="password"
                   />
@@ -159,7 +321,7 @@ const LoginScreen = () => {
                     <MaterialIcons 
                       name={showPassword ? "visibility" : "visibility-off"} 
                       size={20} 
-                      color={Colors.light.icon} 
+                      color={colors.icon} 
                     />
                   </TouchableOpacity>
                 </View>
@@ -174,7 +336,7 @@ const LoginScreen = () => {
                   accessibilityLabel="Login button"
                 >
                   {isLoading ? (
-                    <ActivityIndicator color={Colors.light.buttonText} />
+                    <ActivityIndicator color={colors.buttonText} />
                   ) : (
                     <Text style={styles.loginButtonText}>Login</Text>
                   )}
@@ -222,153 +384,6 @@ const LoginScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1
-  },
-  keyboardAvoiding: {
-    flex: 1,
-  },
-  mainContainer: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
-  // Logo Section
-  container1: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingBottom: 16,
-  },
-  logo: {
-    width: 120,
-    height: 120,
-    resizeMode: 'contain',
-  },
-  // Form Section
-  container2: {
-    flex: 1.2,
-    justifyContent: 'center',
-  },
-  formContainer: {
-    width: '100%',
-  },
-  headerContainer: {
-    marginBottom: 32,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.light.text,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: Colors.light.subtext,
-  },
-  inputContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    position: 'relative',
-  },
-  inputIcon: {
-    position: 'absolute',
-    left: 16,
-    zIndex: 1,
-  },
-  input: {
-    width: '100%',
-    height: 50,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingLeft: 48,
-    backgroundColor: Colors.light.inputBackground,
-    color: Colors.light.text,
-    fontSize: 16,
-  },
-  passwordInput: {
-    width: '100%',
-    height: 50,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingLeft: 48,
-    paddingRight: 48,
-    backgroundColor: Colors.light.inputBackground,
-    color: Colors.light.text,
-    fontSize: 16,
-  },
-  eyeButton: {
-    position: 'absolute',
-    right: 16,
-    padding: 10,
-  },
-  loginButton: {
-    width: '100%',
-    height: 50,
-    backgroundColor: Colors.light.primary,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  loginButtonText: {
-    color: Colors.light.buttonText,
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  errorText: {
-    color: Colors.light.error,
-    fontSize: 14,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  // Footer Section
-  container3: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    paddingBottom: 24,
-  },
-  socialContainer: {
-    marginBottom: 24,
-  },
-  socialText: {
-    fontSize: 16,
-    color: Colors.light.subtext,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  socialIconsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 24,
-  },
-  socialIcon: {
-    width: 40,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  footerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  footerText: {
-    color: Colors.light.text,
-    fontSize: 16,
-  },
-  footerLink: {
-    color: Colors.light.primary,
-    fontWeight: '600',
-    fontSize: 16,
-    marginLeft: 6,
-  },
-});
+
 
 export default LoginScreen;

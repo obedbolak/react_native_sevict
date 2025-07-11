@@ -1,3 +1,4 @@
+import { useTheme } from '@/context/themeContext';
 import { Ionicons } from '@expo/vector-icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useState } from 'react';
@@ -11,7 +12,110 @@ import Settings from "../screens/settings";
 
 type Tabs = "home" | "search" | "profile" | "settings" | "addPost";
 const index = () => {
+  const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<Tabs>("home")
+
+  const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    paddingHorizontal: 10,
+  },
+  headerContainer: {
+    height: 70,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    marginBottom: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  profileContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+  },
+  profileImage: {
+    height: 50,
+    width: 50,
+    borderRadius: 15,
+  },
+  greetingText: {
+    color: 'gray',
+    fontSize: 14,
+  },
+  userName: {
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  notificationIcon: {
+    backgroundColor: 'white',
+    padding: 10,
+    borderRadius: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  navButtonsContainer: {
+    flexDirection: 'row',
+    gap: 40,
+    backgroundColor: colors.background,
+  },
+  // Add this to your styles:
+
+ navIcon: {
+    marginBottom: 5,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  navButton: {
+    alignItems: 'center',
+  },
+  navButtonText: {
+    fontSize: 12,
+    marginTop: 5,
+  },
+  addButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: '53%',
+    marginLeft: -27,
+    backgroundColor: colors.background,
+    borderRadius: 40,
+    padding: 5,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+});
   return (
     <SafeAreaView style={styles.container}>
       {/* Header Section */}
@@ -130,103 +234,3 @@ const index = () => {
 
 export default index;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    paddingHorizontal: 10,
-  },
-  headerContainer: {
-    height: 70,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    marginBottom: 10,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  profileContainer: {
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'center',
-  },
-  profileImage: {
-    height: 50,
-    width: 50,
-    borderRadius: 15,
-  },
-  greetingText: {
-    color: 'gray',
-    fontSize: 14,
-  },
-  userName: {
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  notificationIcon: {
-    backgroundColor: 'white',
-    padding: 10,
-    borderRadius: 20,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  
-  bottomNavContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: 'white',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  navButtonsContainer: {
-    flexDirection: 'row',
-    gap: 40,
-  },
-  // Add this to your styles:
-
- navIcon: {
-    marginBottom: 5,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  navButton: {
-    alignItems: 'center',
-  },
-  navButtonText: {
-    fontSize: 12,
-    marginTop: 5,
-  },
-  addButton: {
-    position: 'absolute',
-    bottom: 20,
-    left: '53%',
-    marginLeft: -27,
-    backgroundColor: 'white',
-    borderRadius: 40,
-    padding: 5,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-});

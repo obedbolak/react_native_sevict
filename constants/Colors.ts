@@ -16,7 +16,7 @@ export const Colors = {
     // Background colors
     background: '#fff',
     inputBackground: 'rgba(200, 199, 199, 0.1)',
-    checkboxBackground: '#fff',
+    checkboxBackground: 'blue',
     
     // Text colors
     text: '#000',
@@ -48,13 +48,13 @@ export const Colors = {
   },
   dark: {
     // Background colors
-    background: '#151718',
+    background: '#040609',
     inputBackground: 'rgba(255, 255, 255, 0.1)',
-    checkboxBackground: '#252728',
+    checkboxBackground: 'white',
     
     // Text colors
     text: '#ECEDEE',
-    subtext: '#9BA1A6',
+    subtext: '#959699',
     buttonText: '#fff',
     placeholder: '#9BA1A6',
     link: '#0a7ea4',

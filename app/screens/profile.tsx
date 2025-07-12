@@ -1,8 +1,10 @@
+import { useTheme } from '@/context/themeContext';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const Profile = () => {
+  const { colors } = useTheme();
   // Sample user data
   const user = {
     name: "Alex Johnson",
@@ -19,105 +21,17 @@ const Profile = () => {
     { id: 3, name: "Data Structures", progress: 90 },
   ];
 
-  return (
-    <ScrollView style={styles.container}>
-      {/* Profile Header */}
-      <View style={styles.profileHeader}>
-        <Image source={{ uri: user.avatar }} style={styles.avatar} />
-        <Text style={styles.userName}>{user.name}</Text>
-        <Text style={styles.userEmail}>{user.email}</Text>
-        
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{user.enrolledCourses}</Text>
-            <Text style={styles.statLabel}>Enrolled</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{user.completedCourses}</Text>
-            <Text style={styles.statLabel}>Completed</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>A</Text>
-            <Text style={styles.statLabel}>Grade Avg</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Student ID Card */}
-      <View style={styles.idCard}>
-        <MaterialCommunityIcons name="card-account-details" size={24} color="#3a86ff" />
-        <View style={styles.idInfo}>
-          <Text style={styles.idLabel}>Student ID</Text>
-          <Text style={styles.idNumber}>{user.studentId}</Text>
-        </View>
-        <TouchableOpacity style={styles.idAction}>
-          <Text style={styles.idActionText}>View</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Current Courses */}
-      <Text style={styles.sectionTitle}>My Courses</Text>
-      {enrolledCourses.map(course => (
-        <TouchableOpacity key={course.id} style={styles.courseCard}>
-          <View style={styles.courseInfo}>
-            <Text style={styles.courseName}>{course.name}</Text>
-            <Text style={styles.courseProgressText}>{course.progress}% Complete</Text>
-          </View>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${course.progress}%` }]} />
-          </View>
-        </TouchableOpacity>
-      ))}
-
-      {/* Quick Actions */}
-      <Text style={styles.sectionTitle}>Quick Actions</Text>
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="assignment" size={24} color="#3a86ff" />
-          <Text style={styles.actionText}>Assignments</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="schedule" size={24} color="#3a86ff" />
-          <Text style={styles.actionText}>Schedule</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="payment" size={24} color="#3a86ff" />
-          <Text style={styles.actionText}>Payments</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-  );
-};
-
-const styles = StyleSheet.create({
+  const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: colors.background,
     padding: 20,
   },
-  profileHeader: {
+   profileHeader: {
     alignItems: 'center',
     marginBottom: 25,
   },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
-    borderColor: '#3a86ff',
-    marginBottom: 15,
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#212529',
-    marginBottom: 5,
-  },
-  userEmail: {
-    fontSize: 16,
-    color: '#6c757d',
-    marginBottom: 20,
-  },
+  
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -226,5 +140,75 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+
+  return (
+    <ScrollView style={styles.container}>
+      {/* Profile Header */}
+      <View style={styles.profileHeader}>
+        
+        
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{user.enrolledCourses}</Text>
+            <Text style={styles.statLabel}>Enrolled</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{user.completedCourses}</Text>
+            <Text style={styles.statLabel}>Completed</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>A</Text>
+            <Text style={styles.statLabel}>Grade Avg</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Student ID Card */}
+      <View style={styles.idCard}>
+        <MaterialCommunityIcons name="card-account-details" size={24} color="#3a86ff" />
+        <View style={styles.idInfo}>
+          <Text style={styles.idLabel}>Student ID</Text>
+          <Text style={styles.idNumber}>{user.studentId}</Text>
+        </View>
+        <TouchableOpacity style={styles.idAction}>
+          <Text style={styles.idActionText}>View</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Current Courses */}
+      <Text style={styles.sectionTitle}>My Courses</Text>
+      {enrolledCourses.map(course => (
+        <TouchableOpacity key={course.id} style={styles.courseCard}>
+          <View style={styles.courseInfo}>
+            <Text style={styles.courseName}>{course.name}</Text>
+            <Text style={styles.courseProgressText}>{course.progress}% Complete</Text>
+          </View>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: `${course.progress}%` }]} />
+          </View>
+        </TouchableOpacity>
+      ))}
+
+      {/* Quick Actions */}
+      <Text style={styles.sectionTitle}>Quick Actions</Text>
+      <View style={styles.actionsContainer}>
+        <TouchableOpacity style={styles.actionButton}>
+          <MaterialIcons name="assignment" size={24} color="#3a86ff" />
+          <Text style={styles.actionText}>Assignments</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton}>
+          <MaterialIcons name="schedule" size={24} color="#3a86ff" />
+          <Text style={styles.actionText}>Schedule</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton}>
+          <MaterialIcons name="payment" size={24} color="#3a86ff" />
+          <Text style={styles.actionText}>Payments</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+};
+
 
 export default Profile;

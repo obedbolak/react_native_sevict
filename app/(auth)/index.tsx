@@ -1,5 +1,5 @@
+import { useAuth } from '@/context/authContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import axios from 'axios';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -23,11 +23,10 @@ import { useTheme } from '../../context/themeContext';
 
 const LoginScreen = () => {
   const { isDarkMode, toggleTheme, colors } = useTheme();
-
+ const {login ,isLoading} = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
    const [errorTimeout, setErrorTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
    
@@ -51,38 +50,9 @@ const LoginScreen = () => {
     return;
   }
 
-  setIsLoading(true);
   
-  try {
-    const response = await axios.post('http://10.0.2.2:5000/users/login', {
-      username: username.trim(),
-      password: password.trim()
-    });
-
-    if (response.data.success) {
-      router.push('/dashboard');
-    } else {
-      setError('Invalid credentials');
-    }
-  } catch (error) {
-    console.error('Login error:', error);
-    
-    // Handle different error types
-    if (error) {
-      // Server responded with a status code outside 2xx
-      setError( 'Login failed');
-    } else if (error) {
-      // Request was made but no response received
-      setError('Network error - please check your connection');
-    } else {
-      // Something else happened
-      setError('An unexpected error occurred');
-    }
-    
-    setErrorTimeout(setTimeout(() => setError(''), 5000));
-  } finally {
-    setIsLoading(false);
-  }
+  login(username, password)
+ 
 };
   const styles = StyleSheet.create({
   safeArea: {

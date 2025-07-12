@@ -1,3 +1,4 @@
+import { useAuth } from '@/context/authContext';
 import { useTheme } from '@/context/themeContext';
 import { Ionicons } from '@expo/vector-icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -14,6 +15,7 @@ type Tabs = "home" | "search" | "profile" | "settings" | "addPost";
 const index = () => {
   const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<Tabs>("home")
+  const {user} = useAuth();
 
   const styles = StyleSheet.create({
   container: {
@@ -27,7 +29,7 @@ const index = () => {
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
-    backgroundColor: 'white',
+    backgroundColor: colors.sectionBackgroundColor,
     borderRadius: 10,
     marginBottom: 10,
     elevation: 2,
@@ -47,12 +49,13 @@ const index = () => {
     borderRadius: 15,
   },
   greetingText: {
-    color: 'gray',
+    color: colors.subtext,
     fontSize: 14,
   },
   userName: {
     fontWeight: 'bold',
     fontSize: 18,
+    color: colors.text,
   },
   notificationIcon: {
     backgroundColor: 'white',
@@ -75,14 +78,14 @@ const index = () => {
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,
-backgroundColor: colors.background,
+backgroundColor: colors.sectionBackgroundColor,
     borderTopWidth: 1,
     borderTopColor: '#eee',
   },
   navButtonsContainer: {
     flexDirection: 'row',
     gap: 40,
-    backgroundColor: colors.background,
+    backgroundColor: colors.sectionBackgroundColor,
   },
   // Add this to your styles:
 
@@ -127,7 +130,7 @@ backgroundColor: colors.background,
           />
           <View>
             <Text style={styles.greetingText}>Good morning</Text>
-            <Text style={styles.userName}>John Doe</Text>
+            <Text style={styles.userName}>{user?.name}</Text>
           </View>
         </View>
         <View style={styles.notificationIcon}>
@@ -203,7 +206,7 @@ backgroundColor: colors.background,
           { color: activeTab === "profile" ? "#2563eb" : "#64748b", fontWeight: activeTab === "profile" ? "bold" : "normal" },
         ]}
       >
-        Profile
+        Portal
       </Text>
     </TouchableOpacity>
     <TouchableOpacity

@@ -1,5 +1,6 @@
+import { AuthProvider, useAuth } from '@/context/authContext';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect } from 'react';
@@ -8,29 +9,45 @@ import { ThemeProvider as CustomThemeProvider, useTheme } from '../context/theme
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
-function MainApp() {
+function ThemedApp() {
   const { isDarkMode } = useTheme();
+  const { isLoading, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (isAuthenticated) {
+        router.replace("/dashboard");
+      } else {
+        router.replace("/(auth)");
+      }
+    }
+  }, [isLoading, isAuthenticated]);
+
+  // Don't render the Stack while still loading auth state
+  if (isLoading) {
+    return null; // Keep splash screen visible
+  }
 
   return (
     <>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
       <Stack>
-        <Stack.Screen 
-          name="(auth)" 
-          options={{ 
+        <Stack.Screen
+          name="dashboard"
+          options={{
             headerShown: false,
             animation: 'fade',
-          }} 
+          }}
         />
-        <Stack.Screen 
-          name="dashboard" 
-          options={{ 
+        <Stack.Screen
+          name="(auth)"
+          options={{
             headerShown: false,
             animation: 'fade',
-          }} 
+          }}
         />
-        <Stack.Screen 
-          name="+not-found" 
+        <Stack.Screen
+          name="+not-found"
           options={{
             title: 'Not Found',
             animation: 'fade',
@@ -63,7 +80,9 @@ export default function RootLayout() {
 
   return (
     <CustomThemeProvider>
-      <MainApp />
+      <AuthProvider>
+        <ThemedApp />
+      </AuthProvider>
     </CustomThemeProvider>
   );
 }

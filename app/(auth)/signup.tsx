@@ -1,6 +1,6 @@
+import { useAuth } from "@/context/authContext";
 import { useTheme } from "@/context/themeContext";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import axios from "axios";
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 
 const SignupScreen = () => {
+  const {  } = useAuth();
   const { isDarkMode, colors } = useTheme();
   const [formData, setFormData] = useState({
     username: '',
@@ -45,7 +46,7 @@ const SignupScreen = () => {
     if (error) setError('');
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     Keyboard.dismiss();
     
     // Clear any existing timeout
@@ -57,26 +58,14 @@ const SignupScreen = () => {
       return;
     }
 
-    setIsLoading(true);
-    const sendData = async () => {
-        try {
-          const response = await axios.post('http://10.0.2.2:5000/users/create', {
-            username: formData.username,
-            password: formData.password,
-            email: formData.email
-            
-          }).then((response) => {
-             console.log(response.data);
-
-          });
-        } catch (error) {
-          console.log(error);
-        }
-      }
-      sendData();
-    // Simulate API call
-    
-  };
+    try {
+      //  await register(formData.username, formData.email, formData.password);
+     
+    } catch (err) {
+      setError('Registration failed. Please try again.');
+      setErrorTimeout(setTimeout(() => setError(''), 5000));
+    }
+};
 
   const styles = StyleSheet.create({
   safeArea: {

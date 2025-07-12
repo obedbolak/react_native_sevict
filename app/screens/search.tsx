@@ -1,8 +1,10 @@
+import { useTheme } from '@/context/themeContext';
 import { FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { FlatList, ImageBackground, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const Search = () => {
+  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -89,216 +91,10 @@ const Search = () => {
     return matchesSearch && matchesCategory && matchesLevel && matchesDuration && matchesRating;
   });
 
-  return (
-    <View style={styles.container}>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <MaterialIcons name="search" size={24} color="#6c757d" />
-          <TextInput
-            placeholder="Search courses, instructors..."
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor="#6c757d"
-          />
-          <TouchableOpacity onPress={() => setShowFilters(true)}>
-            <MaterialIcons name="filter-list" size={24} color="#3a86ff" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Categories */}
-      <Text style={styles.sectionTitle}>Fields of Study</Text>
-      <FlatList
-        horizontal
-        data={categories}
-        keyExtractor={item => item.id}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoriesContainer}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[
-              styles.categoryItem,
-              selectedCategory === item.id && styles.selectedCategory
-            ]}
-            onPress={() => setSelectedCategory(selectedCategory === item.id ? null : item.id)}
-          >
-            <MaterialIcons name={item.icon as any} size={24} color={selectedCategory === item.id ? '#fff' : '#3a86ff'} />
-            <Text style={[styles.categoryText, selectedCategory === item.id && styles.selectedCategoryText]}>
-              {item.name}
-            </Text>
-          </TouchableOpacity>
-        )}
-      />
-
-      {/* Results Count */}
-      <View style={styles.resultsHeader}>
-        <Text style={styles.resultsText}>
-          {filteredCourses.length} {filteredCourses.length === 1 ? 'course' : 'courses'} found
-        </Text>
-        <TouchableOpacity onPress={() => setShowFilters(true)}>
-          <Text style={styles.filterText}>Filters</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Courses List */}
-      <FlatList
-        data={filteredCourses}
-        keyExtractor={item => item.id.toString()}
-        contentContainerStyle={styles.coursesContainer}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.courseCard}>
-            <ImageBackground
-              source={{ uri: item.image }}
-              style={styles.courseImage}
-              imageStyle={styles.courseImageStyle}
-            >
-              <View style={styles.courseLevel}>
-                <Text style={styles.courseLevelText}>{item.level}</Text>
-              </View>
-            </ImageBackground>
-            <View style={styles.courseInfo}>
-              <Text style={styles.courseTitle}>{item.title}</Text>
-              <Text style={styles.courseInstructor}>By {item.instructor}</Text>
-              <View style={styles.courseMeta}>
-                <View style={styles.courseMetaItem}>
-                  <MaterialIcons name="access-time" size={16} color="#6c757d" />
-                  <Text style={styles.courseMetaText}>{item.duration}</Text>
-                </View>
-                <View style={styles.courseMetaItem}>
-                  <FontAwesome name="star" size={16} color="#ffc107" />
-                  <Text style={styles.courseMetaText}>{item.rating}</Text>
-                </View>
-                <View style={styles.courseMetaItem}>
-                  <Ionicons name="people" size={16} color="#6c757d" />
-                  <Text style={styles.courseMetaText}>{item.students}</Text>
-                </View>
-              </View>
-            </View>
-          </TouchableOpacity>
-        )}
-      />
-
-      {/* Filters Modal */}
-       <Modal
-        visible={showFilters}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowFilters(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filters</Text>
-              <TouchableOpacity onPress={() => setShowFilters(false)}>
-                <MaterialIcons name="close" size={24} color="#6c757d" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.filterOptions}>
-              {/* Level Filter */}
-              <View style={styles.filterGroup}>
-                <Text style={styles.filterLabel}>Level</Text>
-                <View style={styles.filterButtons}>
-                  {['All', 'Beginner', 'Intermediate', 'Advanced'].map(level => (
-                    <TouchableOpacity
-                      key={level}
-                      style={[
-                        styles.filterButton,
-                        filters.level === level && styles.activeFilter
-                      ]}
-                      onPress={() => setFilters({...filters, level})}
-                    >
-                      <Text style={[
-                        styles.filterButtonText,
-                        filters.level === level && styles.activeFilterText
-                      ]}>
-                        {level}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              {/* Duration Filter */}
-              <View style={styles.filterGroup}>
-                <Text style={styles.filterLabel}>Duration</Text>
-                <View style={styles.filterButtons}>
-                  {['All', '4', '6', '8', '10', '12'].map(duration => (
-                    <TouchableOpacity
-                      key={duration}
-                      style={[
-                        styles.filterButton,
-                        filters.duration === duration && styles.activeFilter
-                      ]}
-                      onPress={() => setFilters({...filters, duration})}
-                    >
-                      <Text style={[
-                        styles.filterButtonText,
-                        filters.duration === duration && styles.activeFilterText
-                      ]}>
-                        {duration === 'All' ? duration : `${duration} weeks`}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              {/* Rating Filter */}
-              <View style={styles.filterGroup}>
-                <Text style={styles.filterLabel}>Rating</Text>
-                <View style={styles.filterButtons}>
-                  {['All', '4+', '4.5+'].map(rating => (
-                    <TouchableOpacity
-                      key={rating}
-                      style={[
-                        styles.filterButton,
-                        filters.rating === rating && styles.activeFilter
-                      ]}
-                      onPress={() => setFilters({...filters, rating})}
-                    >
-                      <Text style={[
-                        styles.filterButtonText,
-                        filters.rating === rating && styles.activeFilterText
-                      ]}>
-                        {rating === 'All' ? rating : `${rating} ★`}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            </ScrollView>
-
-            <View style={styles.modalFooter}>
-              <TouchableOpacity 
-                style={styles.resetButton}
-                onPress={() => setFilters({
-                  level: 'All',
-                  duration: 'All',
-                  rating: 'All',
-                })}
-              >
-                <Text style={styles.resetButtonText}>Reset Filters</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.applyButton}
-                onPress={() => setShowFilters(false)}
-              >
-                <Text style={styles.applyButtonText}>Apply Filters</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
+  const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: colors.background,
     paddingHorizontal: 16,
   },
   searchContainer: {
@@ -307,7 +103,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: colors.inputBackground,
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -321,12 +117,12 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
     fontSize: 16,
-    color: '#212529',
+    color: colors.text,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#212529',
+    color: colors.text,
     marginBottom: 12,
   },
   categoriesContainer: {
@@ -336,14 +132,14 @@ const styles = StyleSheet.create({
   categoryItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: colors.sectionBackgroundColor,
     borderRadius: 25,
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginRight: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderColor: colors.inputBorder,
     minHeight: 45,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -552,5 +348,213 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
+
+  return (
+    <View style={styles.container}>
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBar}>
+          <MaterialIcons name="search" size={24} color="#6c757d" />
+          <TextInput
+            placeholder="Search courses, instructors..."
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholderTextColor="#6c757d"
+          />
+          <TouchableOpacity onPress={() => setShowFilters(true)}>
+            <MaterialIcons name="filter-list" size={24} color="#3a86ff" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Categories */}
+      <Text style={styles.sectionTitle}>Fields of Study</Text>
+      <FlatList
+        horizontal
+        data={categories}
+        keyExtractor={item => item.id}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.categoriesContainer}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={[
+              styles.categoryItem,
+              selectedCategory === item.id && styles.selectedCategory
+            ]}
+            onPress={() => setSelectedCategory(selectedCategory === item.id ? null : item.id)}
+          >
+            <MaterialIcons name={item.icon as any} size={24} color={selectedCategory === item.id ? '#fff' : '#3a86ff'} />
+            <Text style={[styles.categoryText, selectedCategory === item.id && styles.selectedCategoryText]}>
+              {item.name}
+            </Text>
+          </TouchableOpacity>
+        )}
+      />
+
+      {/* Results Count */}
+      <View style={styles.resultsHeader}>
+        <Text style={styles.resultsText}>
+          {filteredCourses.length} {filteredCourses.length === 1 ? 'course' : 'courses'} found
+        </Text>
+        <TouchableOpacity onPress={() => setShowFilters(true)}>
+          <Text style={styles.filterText}>Filters</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Courses List */}
+      <FlatList
+        data={filteredCourses}
+        keyExtractor={item => item.id.toString()}
+        contentContainerStyle={styles.coursesContainer}
+        renderItem={({ item }) => (
+          <TouchableOpacity style={styles.courseCard}>
+            <ImageBackground
+              source={{ uri: item.image }}
+              style={styles.courseImage}
+              imageStyle={styles.courseImageStyle}
+            >
+              <View style={styles.courseLevel}>
+                <Text style={styles.courseLevelText}>{item.level}</Text>
+              </View>
+            </ImageBackground>
+            <View style={styles.courseInfo}>
+              <Text style={styles.courseTitle}>{item.title}</Text>
+              <Text style={styles.courseInstructor}>By {item.instructor}</Text>
+              <View style={styles.courseMeta}>
+                <View style={styles.courseMetaItem}>
+                  <MaterialIcons name="access-time" size={16} color="#6c757d" />
+                  <Text style={styles.courseMetaText}>{item.duration}</Text>
+                </View>
+                <View style={styles.courseMetaItem}>
+                  <FontAwesome name="star" size={16} color="#ffc107" />
+                  <Text style={styles.courseMetaText}>{item.rating}</Text>
+                </View>
+                <View style={styles.courseMetaItem}>
+                  <Ionicons name="people" size={16} color="#6c757d" />
+                  <Text style={styles.courseMetaText}>{item.students}</Text>
+                </View>
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
+      />
+
+      {/* Filters Modal */}
+       <Modal
+        visible={showFilters}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowFilters(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filters</Text>
+              <TouchableOpacity onPress={() => setShowFilters(false)}>
+                <MaterialIcons name="close" size={24} color="#6c757d" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.filterOptions}>
+              {/* Level Filter */}
+              <View style={styles.filterGroup}>
+                <Text style={styles.filterLabel}>Level</Text>
+                <View style={styles.filterButtons}>
+                  {['All', 'Beginner', 'Intermediate', 'Advanced'].map(level => (
+                    <TouchableOpacity
+                      key={level}
+                      style={[
+                        styles.filterButton,
+                        filters.level === level && styles.activeFilter
+                      ]}
+                      onPress={() => setFilters({...filters, level})}
+                    >
+                      <Text style={[
+                        styles.filterButtonText,
+                        filters.level === level && styles.activeFilterText
+                      ]}>
+                        {level}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Duration Filter */}
+              <View style={styles.filterGroup}>
+                <Text style={styles.filterLabel}>Duration</Text>
+                <View style={styles.filterButtons}>
+                  {['All', '4', '6', '8', '10', '12'].map(duration => (
+                    <TouchableOpacity
+                      key={duration}
+                      style={[
+                        styles.filterButton,
+                        filters.duration === duration && styles.activeFilter
+                      ]}
+                      onPress={() => setFilters({...filters, duration})}
+                    >
+                      <Text style={[
+                        styles.filterButtonText,
+                        filters.duration === duration && styles.activeFilterText
+                      ]}>
+                        {duration === 'All' ? duration : `${duration} weeks`}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Rating Filter */}
+              <View style={styles.filterGroup}>
+                <Text style={styles.filterLabel}>Rating</Text>
+                <View style={styles.filterButtons}>
+                  {['All', '4+', '4.5+'].map(rating => (
+                    <TouchableOpacity
+                      key={rating}
+                      style={[
+                        styles.filterButton,
+                        filters.rating === rating && styles.activeFilter
+                      ]}
+                      onPress={() => setFilters({...filters, rating})}
+                    >
+                      <Text style={[
+                        styles.filterButtonText,
+                        filters.rating === rating && styles.activeFilterText
+                      ]}>
+                        {rating === 'All' ? rating : `${rating} ★`}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity 
+                style={styles.resetButton}
+                onPress={() => setFilters({
+                  level: 'All',
+                  duration: 'All',
+                  rating: 'All',
+                })}
+              >
+                <Text style={styles.resetButtonText}>Reset Filters</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.applyButton}
+                onPress={() => setShowFilters(false)}
+              >
+                <Text style={styles.applyButtonText}>Apply Filters</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
 
 export default Search;

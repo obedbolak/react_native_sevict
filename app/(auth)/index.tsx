@@ -23,10 +23,9 @@ import { useTheme } from '../../context/themeContext';
 
 const LoginScreen = () => {
   const { isDarkMode, toggleTheme, colors } = useTheme();
- const {login ,isLoading} = useAuth();
+ const {login, isLoading, error } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
    const [errorTimeout, setErrorTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
    
@@ -40,18 +39,10 @@ const LoginScreen = () => {
 
  const handleLogin = async () => {
   Keyboard.dismiss();
-
-  // Clear any existing timeout
-  if (errorTimeout) clearTimeout(errorTimeout);
-
-  if (!username.trim() || !password.trim()) {
-    setError('All fields are required');
-    setErrorTimeout(setTimeout(() => setError(''), 5000));
-    return;
-  }
-
+ 
+   await login(username, password)
+ 
   
-  login(username, password)
  
 };
   const styles = StyleSheet.create({
@@ -252,7 +243,7 @@ const LoginScreen = () => {
                     value={username}
                     onChangeText={(text) => {
                       setUsername(text);
-                      if (error) setError('');
+                      
                     }}
                     style={styles.input}
                     autoCapitalize="none"
@@ -303,7 +294,7 @@ const LoginScreen = () => {
                   onPress={handleLogin}
                   style={styles.loginButton}
                   disabled={isLoading}
-                  accessibilityLabel="Login button"
+                 
                 >
                   {isLoading ? (
                     <ActivityIndicator color={colors.buttonText} />

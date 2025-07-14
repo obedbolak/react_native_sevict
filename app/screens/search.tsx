@@ -92,355 +92,367 @@ const Search = () => {
   });
 
   const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    paddingHorizontal: 16,
-  },
-  searchContainer: {
-    marginVertical: 16,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.inputBackground,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 16,
-    color: colors.text,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  categoriesContainer: {
-    paddingBottom: 16,
-    paddingHorizontal: 4,
-  },
-  categoryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.sectionBackgroundColor,
-    borderRadius: 25,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginRight: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
-    minHeight: 45,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  selectedCategory: {
-    backgroundColor: '#3a86ff',
-    borderColor: '#3a86ff',
-  },
-  categoryText: {
-    marginLeft: 8,
-    color: '#495057',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  selectedCategoryText: {
-    color: 'white',
-  },
-  resultsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 16,
-  },
-  resultsText: {
-    fontSize: 14,
-    color: '#6c757d',
-    fontWeight: '500',
-  },
-  filterText: {
-    fontSize: 14,
-    color: '#3a86ff',
-    fontWeight: '600',
-  },
-  coursesContainer: {
-    paddingBottom: 20,
-  },
-  courseCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: 16,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  courseImage: {
-    height: 150,
-    width: '100%',
-  },
-  courseImageStyle: {
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-  },
-  courseLevel: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-  },
-  courseLevelText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  courseInfo: {
-    padding: 16,
-  },
-  courseTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#212529',
-    marginBottom: 4,
-  },
-  courseInstructor: {
-    fontSize: 14,
-    color: '#6c757d',
-    marginBottom: 12,
-  },
-  courseMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  courseMetaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  courseMetaText: {
-    marginLeft: 4,
-    fontSize: 13,
-    color: '#6c757d',
-  },
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '85%',
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f3f5',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#212529',
-  },
-  filterOptions: {
-    flex: 1,
-    marginBottom: 20,
-  },
-  filterGroup: {
-    marginBottom: 28,
-  },
-  filterLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#212529',
-    marginBottom: 14,
-  },
-  filterButtons: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -5,
-  },
-  filterButton: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-    marginHorizontal: 5,
-    marginBottom: 10,
-    minWidth: 70,
-    alignItems: 'center',
-  },
-  activeFilter: {
-    backgroundColor: '#3a86ff',
-    borderColor: '#3a86ff',
-  },
-  filterButtonText: {
-    color: '#495057',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  activeFilterText: {
-    color: 'white',
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#f1f3f5',
-  },
-  resetButton: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    flex: 1,
-    marginRight: 10,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  resetButtonText: {
-    color: '#6c757d',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  applyButton: {
-    backgroundColor: '#3a86ff',
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    flex: 1,
-    alignItems: 'center',
-  },
-  applyButtonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-});
-
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      
+    },
+    searchContainer: {
+      marginVertical: 16,
+    },
+    searchBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.inputBackground,
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      elevation: 2,
+      shadowColor: colors.sectionBackgroundColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+    },
+    searchInput: {
+      flex: 1,
+      marginLeft: 10,
+      fontSize: 16,
+      color: colors.text,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 12,
+    },
+    categoriesContainer: {
+      paddingBottom: 16,
+      paddingHorizontal: 4,
+    },
+    categoryItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.sectionBackgroundColor,
+      borderRadius: 25,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      marginRight: 12,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: colors.inputBorder,
+      minHeight: 45,
+      shadowColor: colors.text,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    selectedCategory: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    categoryText: {
+      marginLeft: 8,
+      color: colors.subtext,
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    selectedCategoryText: {
+      color: colors.buttonText,
+    },
+    resultsHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 20,
+      marginBottom: 16,
+    },
+    resultsText: {
+      fontSize: 14,
+      color: colors.subtext,
+      fontWeight: '500',
+    },
+    filterText: {
+      fontSize: 14,
+      color: colors.primary,
+      fontWeight: '600',
+    },
+    coursesContainer: {
+      paddingBottom: 20,
+    },
+    courseCard: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 12,
+      overflow: 'hidden',
+      marginBottom: 16,
+      elevation: 3,
+      shadowColor: colors.text,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    courseImage: {
+      height: 150,
+      width: '100%',
+    },
+    courseImageStyle: {
+      borderTopLeftRadius: 12,
+      borderTopRightRadius: 12,
+    },
+    courseLevel: {
+      position: 'absolute',
+      top: 10,
+      right: 10,
+      backgroundColor: 'rgba(0,0,0,0.7)',
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      borderRadius: 12,
+    },
+    courseLevelText: {
+      color: colors.buttonText,
+      fontSize: 12,
+      fontWeight: '500',
+    },
+    courseInfo: {
+      padding: 16,
+    },
+    courseTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    courseInstructor: {
+      fontSize: 14,
+      color: colors.subtext,
+      marginBottom: 12,
+    },
+    courseMeta: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    courseMetaItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    courseMetaText: {
+      marginLeft: 4,
+      fontSize: 13,
+      color: colors.subtext,
+    },
+    // Modal styles
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContainer: {
+      backgroundColor: colors.cardBackground,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      maxHeight: '85%',
+      paddingTop: 20,
+      paddingHorizontal: 20,
+      paddingBottom: 20,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 20,
+      paddingBottom: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: colors.text,
+    },
+    filterOptions: {
+      flex: 1,
+      marginBottom: 20,
+    },
+    filterGroup: {
+      marginBottom: 28,
+    },
+    filterLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 14,
+    },
+    filterButtons: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginHorizontal: -5,
+    },
+    filterButton: {
+      backgroundColor: colors.inputBackground,
+      borderRadius: 20,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderWidth: 1,
+      borderColor: colors.inputBorder,
+      marginHorizontal: 5,
+      marginBottom: 10,
+      minWidth: 70,
+      alignItems: 'center',
+    },
+    activeFilter: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    filterButtonText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    activeFilterText: {
+      color: colors.buttonText,
+    },
+    modalFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingTop: 20,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    resetButton: {
+      backgroundColor: colors.inputBackground,
+      borderRadius: 12,
+      paddingVertical: 16,
+      paddingHorizontal: 24,
+      flex: 1,
+      marginRight: 10,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.inputBorder,
+    },
+    resetButtonText: {
+      color: colors.subtext,
+      fontWeight: '600',
+      fontSize: 16,
+    },
+    applyButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      paddingHorizontal: 24,
+      flex: 1,
+      alignItems: 'center',
+    },
+    applyButtonText: {
+      color: colors.buttonText,
+      fontWeight: '600',
+      fontSize: 16,
+    },
+  });
 
   return (
-    <View style={styles.container}>
+   <View style={styles.container}>
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
-          <MaterialIcons name="search" size={24} color="#6c757d" />
+          <MaterialIcons name="search" size={24} color={colors.subtext} />
           <TextInput
             placeholder="Search courses, instructors..."
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholderTextColor="#6c757d"
+            placeholderTextColor={colors.subtext}
           />
           <TouchableOpacity onPress={() => setShowFilters(true)}>
-            <MaterialIcons name="filter-list" size={24} color="#3a86ff" />
+            <MaterialIcons name="filter-list" size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Categories */}
-      <Text style={styles.sectionTitle}>Fields of Study</Text>
+      {/* Main content with FlatList */}
       <FlatList
-        horizontal
-        data={categories}
-        keyExtractor={item => item.id}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoriesContainer}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[
-              styles.categoryItem,
-              selectedCategory === item.id && styles.selectedCategory
-            ]}
-            onPress={() => setSelectedCategory(selectedCategory === item.id ? null : item.id)}
-          >
-            <MaterialIcons name={item.icon as any} size={24} color={selectedCategory === item.id ? '#fff' : '#3a86ff'} />
-            <Text style={[styles.categoryText, selectedCategory === item.id && styles.selectedCategoryText]}>
-              {item.name}
-            </Text>
-          </TouchableOpacity>
-        )}
-      />
+        data={[]} // Empty data to make FlatList render only the ListHeaderComponent
+        keyExtractor={() => 'header'}
+        ListHeaderComponent={
+          <>
+            {/* Categories */}
+            <Text style={styles.sectionTitle}>Fields of Study</Text>
+            <FlatList
+              horizontal
+              data={categories}
+              keyExtractor={item => item.id}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoriesContainer}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.categoryItem,
+                    selectedCategory === item.id && styles.selectedCategory
+                  ]}
+                  onPress={() => setSelectedCategory(selectedCategory === item.id ? null : item.id)}
+                >
+                  <MaterialIcons name={item.icon as any} size={24} color={selectedCategory === item.id ? colors.buttonText : colors.primary} />
+                  <Text style={[styles.categoryText, selectedCategory === item.id && styles.selectedCategoryText]}>
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
 
-      {/* Results Count */}
-      <View style={styles.resultsHeader}>
-        <Text style={styles.resultsText}>
-          {filteredCourses.length} {filteredCourses.length === 1 ? 'course' : 'courses'} found
-        </Text>
-        <TouchableOpacity onPress={() => setShowFilters(true)}>
-          <Text style={styles.filterText}>Filters</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Courses List */}
-      <FlatList
-        data={filteredCourses}
-        keyExtractor={item => item.id.toString()}
-        contentContainerStyle={styles.coursesContainer}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.courseCard}>
-            <ImageBackground
-              source={{ uri: item.image }}
-              style={styles.courseImage}
-              imageStyle={styles.courseImageStyle}
-            >
-              <View style={styles.courseLevel}>
-                <Text style={styles.courseLevelText}>{item.level}</Text>
-              </View>
-            </ImageBackground>
-            <View style={styles.courseInfo}>
-              <Text style={styles.courseTitle}>{item.title}</Text>
-              <Text style={styles.courseInstructor}>By {item.instructor}</Text>
-              <View style={styles.courseMeta}>
-                <View style={styles.courseMetaItem}>
-                  <MaterialIcons name="access-time" size={16} color="#6c757d" />
-                  <Text style={styles.courseMetaText}>{item.duration}</Text>
-                </View>
-                <View style={styles.courseMetaItem}>
-                  <FontAwesome name="star" size={16} color="#ffc107" />
-                  <Text style={styles.courseMetaText}>{item.rating}</Text>
-                </View>
-                <View style={styles.courseMetaItem}>
-                  <Ionicons name="people" size={16} color="#6c757d" />
-                  <Text style={styles.courseMetaText}>{item.students}</Text>
-                </View>
-              </View>
+            {/* Results Count */}
+            <View style={styles.resultsHeader}>
+              <Text style={styles.resultsText}>
+                {filteredCourses.length} {filteredCourses.length === 1 ? 'course' : 'courses'} found
+              </Text>
+              <TouchableOpacity onPress={() => setShowFilters(true)}>
+                <Text style={styles.filterText}>Filters</Text>
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-        )}
+          </>
+        }
+        renderItem={() => null} // Empty renderItem since we're using ListHeaderComponent
+        ListFooterComponent={
+          <>
+            {/* Courses List */}
+            <FlatList
+              data={filteredCourses}
+              keyExtractor={item => item.id.toString()}
+              scrollEnabled={false} // Important to prevent nested scrolling
+              contentContainerStyle={styles.coursesContainer}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={styles.courseCard}>
+                  <ImageBackground
+                    source={{ uri: item.image }}
+                    style={styles.courseImage}
+                    imageStyle={styles.courseImageStyle}
+                  >
+                    <View style={styles.courseLevel}>
+                      <Text style={styles.courseLevelText}>{item.level}</Text>
+                    </View>
+                  </ImageBackground>
+                  <View style={styles.courseInfo}>
+                    <Text style={styles.courseTitle}>{item.title}</Text>
+                    <Text style={styles.courseInstructor}>By {item.instructor}</Text>
+                    <View style={styles.courseMeta}>
+                      <View style={styles.courseMetaItem}>
+                        <MaterialIcons name="access-time" size={16} color={colors.subtext} />
+                        <Text style={styles.courseMetaText}>{item.duration}</Text>
+                      </View>
+                      <View style={styles.courseMetaItem}>
+                        <FontAwesome name="star" size={16} color="#ffc107" />
+                        <Text style={styles.courseMetaText}>{item.rating}</Text>
+                      </View>
+                      <View style={styles.courseMetaItem}>
+                        <Ionicons name="people" size={16} color={colors.subtext} />
+                        <Text style={styles.courseMetaText}>{item.students}</Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+          </>
+        }
       />
-
       {/* Filters Modal */}
        <Modal
         visible={showFilters}
@@ -453,7 +465,7 @@ const Search = () => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Filters</Text>
               <TouchableOpacity onPress={() => setShowFilters(false)}>
-                <MaterialIcons name="close" size={24} color="#6c757d" />
+                <MaterialIcons name="close" size={24} color={colors.subtext} />
               </TouchableOpacity>
             </View>
 
@@ -555,6 +567,5 @@ const Search = () => {
     </View>
   );
 };
-
 
 export default Search;

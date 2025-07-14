@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect } from 'react';
 import { ThemeProvider as CustomThemeProvider, useTheme } from '../context/themeContext';
 
+
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
@@ -30,30 +31,26 @@ function ThemedApp() {
 
   return (
     <>
-      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-      <Stack>
-        <Stack.Screen
-          name="dashboard"
-          options={{
-            headerShown: false,
-            animation: 'fade',
-          }}
-        />
-        <Stack.Screen
-          name="(auth)"
-          options={{
-            headerShown: false,
-            animation: 'fade',
-          }}
-        />
-        <Stack.Screen
-          name="+not-found"
-          options={{
-            title: 'Not Found',
-            animation: 'fade',
-          }}
-        />
-      </Stack>
+    <StatusBar style={isDarkMode ? "light" : "dark"} />
+    
+    {
+      isAuthenticated ? (
+        <Stack>
+          <Stack.Screen name="dashboard" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      ) : (
+        <Stack>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="dashboard" options={{ headerShown: false }} />
+
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      )
+    }
+      
     </>
   );
 }

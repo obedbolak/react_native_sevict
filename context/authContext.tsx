@@ -1,4 +1,5 @@
 import axios from "axios";
+import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
@@ -28,6 +29,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
+  register: (username: string, email: string, password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -71,10 +73,50 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     try {
+    setIsLoading(true);
+
+      const response = await axios.post<AuthResponse>("http://10.0.2.2:5000/api/v1/auth/login", {
+        email,
+        password,
+      });
+      
+
+      if (response.data.success) {
+
+        // receive token and user from the response of the server 
+        const { token, user } = response.data;
+        setIsLoading(false);
+        // Store both token and user data securely
+        await SecureStore.setItemAsync("authToken", token);
+        await SecureStore.setItemAsync("authUser", JSON.stringify(user));
+        
+        // Update state
+        setToken(token);
+        setUser(user);
+        setIsAuthenticated(true);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        router.replace("/dashboard");
+        // Note: Navigation is now handled in the layout component
+      }
+    } catch (error: any) {
+      let errorMessage = "Login failed. Please try again.";
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      setError(errorMessage);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (username: string, email: string, password: string) => {
+    try {
       setIsLoading(true);
       setError(null);
 
-      const response = await axios.post<AuthResponse>("http://10.0.2.2:5000/api/v1/auth/login", {
+    const response = await axios.post<AuthResponse>("http://10.0.2.2:5000/api/v1/auth/register", {
+        username,
         email,
         password,
       });
@@ -94,8 +136,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         // Note: Navigation is now handled in the layout component
       }
-    } catch (error: any) {
-      let errorMessage = "Login failed. Please try again.";
+    } catch (error: any) {      
+
+      let errorMessage = "Registration failed. Please try again.";
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
@@ -143,6 +186,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         user,
         login,
         logout,
+        register,
         clearError,
       }}
     >

@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 
 const SignupScreen = () => {
-  const {  } = useAuth();
+  const {  register} = useAuth();
   const { isDarkMode, colors } = useTheme();
   const [formData, setFormData] = useState({
     username: '',
@@ -49,21 +49,18 @@ const SignupScreen = () => {
   const handleRegister = async () => {
     Keyboard.dismiss();
     
-    // Clear any existing timeout
-    if (errorTimeout) clearTimeout(errorTimeout);
+   
 
-    if (!formData.username.trim() || !formData.password.trim() || !formData.email.trim()) {
-      setError('All fields are required');
-      setErrorTimeout(setTimeout(() => setError(''), 5000));
-      return;
-    }
+   
 
     try {
-      //  await register(formData.username, formData.email, formData.password);
+       await register(formData.username, formData.email, formData.password);
      
     } catch (err) {
+      
       setError('Registration failed. Please try again.');
       setErrorTimeout(setTimeout(() => setError(''), 5000));
+      return;
     }
 };
 

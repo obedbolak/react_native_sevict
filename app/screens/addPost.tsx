@@ -1,11 +1,11 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Alert,
   FlatList,
   Image,
-  ListRenderItem,
   Modal,
   ScrollView,
   StyleSheet,
@@ -40,33 +40,33 @@ interface FormData {
 }
 
 const AddPost = () => {
-  const [posts, setPosts] = React.useState<Post[]>([
-    {
-      id: '1',
-      title: 'Getting Started with React Native',
-      content: 'Here are some tips for beginners starting with React Native development...',
-      author: 'Jane Doe',
-      date: '2 hours ago',
-      likes: 24,
-      comments: 5,
-      type: 'text' as const,
-      tags: ['reactnative', 'beginners']
-    },
-    {
-      id: '2',
-      title: 'Beautiful Sunset',
-      content: '',
-      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
-      author: 'John Smith',
-      date: '1 day ago',
-      likes: 142,
-      comments: 18,
-      type: 'image' as const,
-      tags: ['photography', 'nature']
-    },
-    // Add more posts as needed
-  ]);
-
+  // const [posts, setPosts] = React.useState<Post[]>([
+  //   {
+  //     id: '1',
+  //     title: 'Getting Started with React Native',
+  //     content: 'Here are some tips for beginners starting with React Native development...',
+  //     author: 'Jane Doe',
+  //     date: '2 hours ago',
+  //     likes: 24,
+  //     comments: 5,
+  //     type: 'text' as const,
+  //     tags: ['reactnative', 'beginners']
+  //   },
+  //   {
+  //     id: '2',
+  //     title: 'Beautiful Sunset',
+  //     content: '',
+  //     image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
+  //     author: 'John Smith',
+  //     date: '1 day ago',
+  //     likes: 142,
+  //     comments: 18,
+  //     type: 'image' as const,
+  //     tags: ['photography', 'nature']
+  //   },
+  //   // Add more posts as needed
+  // ]);
+const [fetchedPosts, setFetchedPosts] = React.useState<Post[]>([]);
   // State for modal visibility
   const [isModalVisible, setIsModalVisible] = React.useState(false);
   
@@ -210,64 +210,94 @@ const AddPost = () => {
     handleInputChange('image', randomImage);
   };
 
-  const renderPost: ListRenderItem<Post> = ({ item }) => (
-    <View style={styles.postContainer}>
-      <View style={styles.postHeader}>
-        <Text style={styles.postAuthor}>{item.author}</Text>
-        <Text style={styles.postDate}>{item.date}</Text>
-      </View>
-      
-      <Text style={styles.postTitle}>{item.title}</Text>
-      
-      {item.type === 'text' && (
-        <Text style={styles.postContent}>{item.content}</Text>
-      )}
-      
-      {item.type === 'image' && item.image && (
-        <Image source={{ uri: item.image }} style={styles.postImage} />
-      )}
-      
-      <View style={styles.tagsContainer}>
-        {item.tags.map((tag, index) => (
-          <Text key={index} style={styles.tag}>#{tag}</Text>
-        ))}
-      </View>
-      
-      <View style={styles.postFooter}>
-        <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="favorite-outline" size={20} color={Colors.light.icon} />
-          <Text style={styles.actionText}>{item.likes}</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="chat-bubble-outline" size={20} color={Colors.light.icon} />
-          <Text style={styles.actionText}>{item.comments}</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="share" size={20} color={Colors.light.icon} />
-          <Text style={styles.actionText}>Share</Text>
-        </TouchableOpacity>
-      </View>
+      interface Post {
+  _id: string;
+  title: string;
+  description?: string;
+  images?: Array<{ public_id: string; url: string }>;
+  createdAt?: string;
+  postedBy?: { name: string };
+}
+
+const renderPostItem = ({ item }: { item: Post }) => (
+  <View style={styles.postContainer} key={item._id}>
+    <View style={styles.postHeader}>
+      <Text style={styles.postAuthor}>
+        {item.postedBy?.name || "Anonymous"}
+      </Text>
+      <Text style={styles.postDate}>
+        {new Date(item.createdAt || Date.now()).toLocaleDateString()}
+      </Text>
     </View>
-  );
+    
+    <Text style={styles.postTitle}>{item.title}</Text>
+    
+    {item.description && (
+      <Text style={styles.postContent}>{item.description}</Text>
+    )}
+    
+    {item.images?.[0]?.url && (
+      <Image 
+        source={{ uri: item.images[0].url }} 
+        style={styles.postImage} 
+      />
+    )}
+    
+    <View style={styles.postFooter}>
+      <TouchableOpacity style={styles.actionButton}>
+        <MaterialIcons name="favorite-outline" size={20} color={Colors.light.icon} />
+        <Text style={styles.actionText}>2</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.actionButton}>
+        <MaterialIcons name="chat-bubble-outline" size={20} color={Colors.light.icon} />
+        <Text style={styles.actionText}>3</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.actionButton}>
+        <MaterialIcons name="share" size={20} color={Colors.light.icon} />
+        <Text style={styles.actionText}>Share</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await axios.get('http://10.0.2.2:5000/api/v1/post/get-all-post');
+        const data = await response.data.posts;
+        setFetchedPosts(data);
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+      }
+    }
+    fetchPosts();
+    
+  }, []);
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={posts}
-        renderItem={renderPost}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
-          <TouchableOpacity 
-            style={styles.createPostButton}
-            onPress={() => setIsModalVisible(true)}
-          >
-            <Text style={styles.createPostButtonText}>Create New Post</Text>
-          </TouchableOpacity>
-        }
-      />
+      
+  
+<FlatList
+  data={fetchedPosts}
+  renderItem={renderPostItem}
+  keyExtractor={(item) => item._id}
+  contentContainerStyle={styles.listContent}
+  ListHeaderComponent={
+    <>
+      <TouchableOpacity 
+        style={styles.createPostButton}
+        onPress={() => setIsModalVisible(true)}
+      >
+        <Text style={styles.createPostButtonText}>Create New Post</Text>
+      </TouchableOpacity>
+
+      {fetchedPosts.map((post: Post) => renderPostItem({ item: post }))}
+    </>
+  }
+/>
 
       {/* Create Post Modal */}
       <Modal
@@ -400,6 +430,7 @@ const AddPost = () => {
           </View>
         </View>
       </Modal>
+      
     </View>
   );
 };

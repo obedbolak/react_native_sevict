@@ -1,5 +1,4 @@
 import axios from "axios";
-import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
@@ -29,7 +28,10 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
-  register: (username: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,7 +39,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Start with true for initial load
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
 
@@ -45,24 +47,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const loadAuthData = async () => {
       try {
-        setIsLoading(true);
-        
-        // Get both token and user data from secure storage
         const [storedToken, storedUser] = await Promise.all([
           SecureStore.getItemAsync("authToken"),
           SecureStore.getItemAsync("authUser")
         ]);
 
-        // If both token and user details exist, log the user in
-        if (storedToken && storedUser) { 
+        if (storedToken && storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          
+          // Set all auth states together to avoid race conditions
           setToken(storedToken);
-          setUser(JSON.parse(storedUser));
+          setUser(parsedUser);
           setIsAuthenticated(true);
+          
+          // Set axios default header
           axios.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
+          
+          console.log("Auth restored from storage");
+        } else {
+          // If no stored auth data, ensure we're in unauthenticated state
+          setIsAuthenticated(false);
         }
       } catch (error) {
         console.error("Failed to load auth data", error);
         setError("Failed to load authentication data");
+        setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
@@ -73,77 +82,112 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     try {
-    setIsLoading(true);
+      setIsLoading(true);
+      setError(null); // Clear previous errors
 
       const response = await axios.post<AuthResponse>("http://10.0.2.2:5000/api/v1/auth/login", {
         email,
         password,
       });
-      
 
       if (response.data.success) {
-
-        // receive token and user from the response of the server 
-        const { token, user } = response.data;
-        setIsLoading(false);
-        // Store both token and user data securely
-        await SecureStore.setItemAsync("authToken", token);
-        await SecureStore.setItemAsync("authUser", JSON.stringify(user));
+        const { token: newToken, user: newUser } = response.data;
         
-        // Update state
-        setToken(token);
-        setUser(user);
+        // Store auth data securely
+        await Promise.all([
+          SecureStore.setItemAsync("authToken", newToken),
+          SecureStore.setItemAsync("authUser", JSON.stringify(newUser))
+        ]);
+        
+        // Update state atomically
+        setToken(newToken);
+        setUser(newUser);
         setIsAuthenticated(true);
-        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-        router.replace("/dashboard");
-        // Note: Navigation is now handled in the layout component
+        
+        // Set axios default header
+        axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+        
+        console.log("Login successful");
+        
+        // Navigation will be handled by the layout component
+        // based on the updated isAuthenticated state
       }
     } catch (error: any) {
       let errorMessage = "Login failed. Please try again.";
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
+      
       setError(errorMessage);
+      setTimeout(() => setError(null), 5000);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (username: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string) => {
     try {
       setIsLoading(true);
       setError(null);
 
-    const response = await axios.post<AuthResponse>("http://10.0.2.2:5000/api/v1/auth/register", {
-        username,
-        email,
-        password,
-      });
+      // Basic client-side validation
+      if (!name || !email || !password) {
+        throw new Error("All fields are required");
+      }
+
+      if (password.length < 6) {
+        throw new Error("Password must be at least 6 characters long");
+      }
+
+      const response = await axios.post<AuthResponse>(
+        "http://10.0.2.2:5000/api/v1/auth/register", 
+        { name, email, password },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000,
+        }
+      );
 
       if (response.data.success) {
-        const { token, user } = response.data;
+        const { token: newToken, user: newUser } = response.data;
         
-        // Store both token and user data securely
-        await SecureStore.setItemAsync("authToken", token);
-        await SecureStore.setItemAsync("authUser", JSON.stringify(user));
+        // Store auth data securely
+        await Promise.all([
+          SecureStore.setItemAsync("authToken", newToken),
+          SecureStore.setItemAsync("authUser", JSON.stringify(newUser))
+        ]);
         
-        // Update state
-        setToken(token);
-        setUser(user);
+        // Update state atomically
+        setToken(newToken);
+        setUser(newUser);
         setIsAuthenticated(true);
-        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         
-        // Note: Navigation is now handled in the layout component
+        // Set axios default header
+        axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+        
+        console.log("Registration successful");
+        
+        return { success: true };
+      } else {
+        throw new Error(response.data.message || "Registration failed");
       }
-    } catch (error: any) {      
-
+    } catch (error: any) {
       let errorMessage = "Registration failed. Please try again.";
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
+      
+      if (error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+      } else if (error.request) {
+        errorMessage = "Network error. Please check your connection.";
+      } else {
+        errorMessage = error.message || errorMessage;
       }
+
       setError(errorMessage);
-      throw error;
+      setTimeout(() => setError(null), 5000);
+      return { success: false, error: errorMessage };
     } finally {
       setIsLoading(false);
     }
@@ -153,17 +197,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setIsLoading(true);
       
-      // Clear all auth data from storage
-      await SecureStore.deleteItemAsync("authToken");
-      await SecureStore.deleteItemAsync("authUser");
+      // Clear auth data from storage
+      await Promise.all([
+        SecureStore.deleteItemAsync("authToken"),
+        SecureStore.deleteItemAsync("authUser")
+      ]);
       
-      // Reset state
+      // Reset state atomically
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);
+      
+      // Remove axios default header
       delete axios.defaults.headers.common["Authorization"];
       
-      // Note: Navigation is now handled in the layout component
+      console.log("Logout successful");
+      
+      // Navigation will be handled by the layout component
     } catch (error) {
       console.error("Failed to logout", error);
       setError("Failed to logout. Please try again.");

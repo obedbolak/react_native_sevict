@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 
 const SignupScreen = () => {
-  const {  register} = useAuth();
+  const {  register, error} = useAuth();
   const { isDarkMode, colors } = useTheme();
   const [formData, setFormData] = useState({
     username: '',
@@ -28,7 +28,6 @@ const SignupScreen = () => {
     confirmPassword: ''
   });
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -43,25 +42,12 @@ const SignupScreen = () => {
 
   const handleInputChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (error) setError('');
+    
   };
 
   const handleRegister = async () => {
     Keyboard.dismiss();
-    
-   
-
-   
-
-    try {
-       await register(formData.username, formData.email, formData.password);
-     
-    } catch (err) {
-      
-      setError('Registration failed. Please try again.');
-      setErrorTimeout(setTimeout(() => setError(''), 5000));
-      return;
-    }
+     await register(formData.username, formData.email, formData.password); 
 };
 
   const styles = StyleSheet.create({

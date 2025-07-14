@@ -1,3 +1,4 @@
+import { useTheme } from '@/context/themeContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
@@ -40,6 +41,7 @@ interface FormData {
 }
 
 const AddPost = () => {
+  const{colors} = useTheme();
   // const [posts, setPosts] = React.useState<Post[]>([
   //   {
   //     id: '1',
@@ -87,20 +89,8 @@ const [fetchedPosts, setFetchedPosts] = React.useState<Post[]>([]);
       return;
     }
 
-    const newPost: Post = {
-      id: Date.now().toString(),
-      title: formData.title,
-      content: formData.content,
-      image: formData.image,
-      author: formData.author,
-      date: 'just now',
-      likes: 0,
-      comments: 0,
-      type: formData.image ? 'image' as const : 'text' as const,
-      tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
-    };
-
-    setPosts([newPost, ...posts]);
+   
+    
     setFormData({
       title: '',
       content: '',
@@ -276,6 +266,232 @@ const renderPostItem = ({ item }: { item: Post }) => (
     
   }, []);
 
+
+  const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  listContent: {
+    padding: 16,
+  },
+  createPostButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: 12,  
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  createPostButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',   
+  },
+  postContainer: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  postHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  postAuthor: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.text,
+
+  },
+  postDate: {
+    fontSize: 12,
+    color: colors.subtext, 
+  },
+  postTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  postContent: {
+    fontSize: 16,
+    color: colors.subtext,
+    marginBottom: 16,
+  },
+  postImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  tag: {
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    color: '#6c757d',
+  },
+  postFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },  
+  actionText: {
+    fontSize: 14,
+    color: '#6c757d',
+    marginLeft: 4,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    width: '90%',
+    maxHeight: '80%',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  modalContent: {
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#212529',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  formContainer: {
+    gap: 16,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212529',
+    marginBottom: 4,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    backgroundColor: '#f8f9fa',
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#6c757d',
+  },
+  submitButton: {
+    backgroundColor: Colors.light.primary,
+  },
+  cancelButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  // Image picker styles
+  imageSection: {
+    gap: 12,
+  },
+  imageButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    gap: 8,
+  },
+  imageButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    gap: 6,
+  },
+  imageButtonText: {
+    fontSize: 14,
+    color: Colors.light.primary,
+    fontWeight: '600',
+  },
+  imagePreview: {
+    position: 'relative',
+    alignSelf: 'center',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  previewImage: {
+    width: 200,
+    height: 120,
+    borderRadius: 8,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
+
   return (
     <View style={styles.container}>
       
@@ -435,226 +651,3 @@ const renderPostItem = ({ item }: { item: Post }) => (
   );
 };
 export default AddPost;
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
-  },
-  listContent: {
-    padding: 16,
-  },
-  createPostButton: {
-    backgroundColor: Colors.light.primary,
-    borderRadius: 8,
-    paddingVertical: 12,  
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  createPostButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',   
-  },
-  postContainer: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  postHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  postAuthor: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#212529',
-  },
-  postDate: {
-    fontSize: 12,
-    color: '#6c757d', 
-  },
-  postTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#212529',
-    marginBottom: 8,
-  },
-  postContent: {
-    fontSize: 16,
-    color: '#6c757d',
-    marginBottom: 16,
-  },
-  postImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
-  },
-  tag: {
-    backgroundColor: '#e9ecef',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    color: '#6c757d',
-  },
-  postFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },  
-  actionText: {
-    fontSize: 14,
-    color: '#6c757d',
-    marginLeft: 4,
-  },
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    width: '90%',
-    maxHeight: '80%',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  modalContent: {
-    padding: 20,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#212529',
-  },
-  closeButton: {
-    padding: 4,
-  },
-  formContainer: {
-    gap: 16,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#212529',
-    marginBottom: 4,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    backgroundColor: '#f8f9fa',
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 20,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#6c757d',
-  },
-  submitButton: {
-    backgroundColor: Colors.light.primary,
-  },
-  cancelButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  submitButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  // Image picker styles
-  imageSection: {
-    gap: 12,
-  },
-  imageButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    gap: 8,
-  },
-  imageButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    gap: 6,
-  },
-  imageButtonText: {
-    fontSize: 14,
-    color: Colors.light.primary,
-    fontWeight: '600',
-  },
-  imagePreview: {
-    position: 'relative',
-    alignSelf: 'center',
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  previewImage: {
-    width: 200,
-    height: 120,
-    borderRadius: 8,
-  },
-  removeImageButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

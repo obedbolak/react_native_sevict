@@ -81,6 +81,7 @@ const index = () => {
 backgroundColor: colors.sectionBackgroundColor,
     borderTopWidth: 1,
     borderTopColor: '#eee',
+    borderTopEndRadius: 10,
   },
   navButtonsContainer: {
     flexDirection: 'row',

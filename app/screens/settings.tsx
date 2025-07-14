@@ -114,7 +114,8 @@ const Settings = () => {
     studentId: "TF20230045",
     enrolledCourses: 5,
     completedCourses: 3,
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+
+    avatar: user?.profilepic?.url || "https://randomuser.me/api/portraits/men/32.jpg",
   };
 
   const settingsItems = [

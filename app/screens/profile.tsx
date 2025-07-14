@@ -1,16 +1,41 @@
 import { useTheme } from '@/context/themeContext';
-import { FontAwesome, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from 'react-native';
 
 const Profile = () => {
   const { colors } = useTheme();
 
+  // Student data
+  const studentInfo = {
+    name: "Alex Johnson",
+    studentId: "STU2024-001",
+    program: "Computer Science",
+    year: "3rd Year",
+    gpa: 3.8,
+    email: "alex.johnson@university.edu",
+    phone: "+1 (555) 123-4567",
+    address: "123 University Ave, Campus City",
+    enrollmentDate: "September 2022",
+    expectedGraduation: "May 2026",
+    advisor: "Dr. Sarah Mitchell",
+    profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+    bannerImage: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=200&fit=crop"
+  };
+
   // Portal data
   const portalStats = {
     announcements: 3,
-    upcomingDeadlines: 2,
+    
     newResources: 5,
+    coursesEnrolled: 6
+  };
+
+  const academicProgress = {
+    completedCredits: 90,
+    totalCredits: 120,
+    currentSemesterCredits: 15,
+    honors: ["Dean's List Fall 2023", "Academic Excellence Award"]
   };
 
   const paymentDetails = {
@@ -43,71 +68,123 @@ const Profile = () => {
 
   const styles = StyleSheet.create({
     container: {
-      flex:1,
+      flex: 1,
       backgroundColor: colors.background,
-      padding: 20,
       marginBottom: 60,
     },
-    portalHeader: {
-      flexDirection: 'column',
-      alignItems: 'center',
-      marginBottom: 25,
-      paddingVertical: 15,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 16,
-      elevation: 3,
-      shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
+    bannerContainer: {
+      position: 'relative',
+      height: 200,
+      marginBottom: 60,
     },
-    portalTitle: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: colors.primary,
-      marginBottom: 5,
+    bannerImage: {
+      width: '100%',
+      height: '100%',
+      resizeMode: 'cover',
     },
-    portalSubtitle: {
-      fontSize: 18,
-      color: colors.subtext,
-      textAlign: 'center',
-      paddingHorizontal: 30,
-    },
-    notificationIcon: {
+    bannerOverlay: {
       position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    },
+    profileCard: {
+      position: 'absolute',
+      top: 100,
+      left: 20,
       right: 20,
-      top: 20,
-    },
-    portalStats: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 25,
-    },
-    statCard: {
       backgroundColor: colors.cardBackground,
-      borderRadius: 12,
-      padding: 15,
-      width: '30%',
+      borderRadius: 20,
+      padding: 20,
+      elevation: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+    },
+    profileHeader: {
+      flexDirection: 'row',
       alignItems: 'center',
-      elevation: 2,
+      marginBottom: 15,
     },
-    statNumber: {
-      fontSize: 22,
+    profileImage: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      marginRight: 15,
+      borderWidth: 4,
+      borderColor: colors.primary,
+    },
+    profileInfo: {
+      flex: 1,
+    },
+    studentName: {
+      fontSize: 24,
       fontWeight: 'bold',
-      color: colors.primary,
-      marginBottom: 5,
+      color: colors.text,
+      marginBottom: 4,
     },
-    statLabel: {
+    studentId: {
+      fontSize: 16,
+      color: colors.primary,
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+    studentProgram: {
+      fontSize: 14,
+      color: colors.subtext,
+      marginBottom: 2,
+    },
+    studentYear: {
+      fontSize: 14,
+      color: colors.subtext,
+    },
+    gpaContainer: {
+      position: 'absolute',
+      top: 20,
+      right: 20,
+      backgroundColor: colors.primary,
+      borderRadius: 25,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    gpaText: {
+      color: colors.buttonText,
+      fontSize: 14,
+      fontWeight: 'bold',
+    },
+    studentDetails: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      marginTop: 10,
+    },
+    detailItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: '48%',
+      marginBottom: 8,
+    },
+    detailIcon: {
+      marginRight: 8,
+    },
+    detailText: {
       fontSize: 12,
       color: colors.subtext,
-      textAlign: 'center',
+      flex: 1,
+    },
+    scrollContent: {
+      padding: 20,
+      marginTop: 80,
     },
     sectionTitle: {
-      fontSize: 18,
+      fontSize: 20,
       fontWeight: 'bold',
       color: colors.text,
       marginBottom: 15,
-      marginTop: 10,
+      marginTop: 20,
     },
     sectionHeader: {
       flexDirection: 'row',
@@ -118,14 +195,118 @@ const Profile = () => {
     viewAllText: {
       color: colors.primary,
       fontSize: 14,
+      fontWeight: '600',
+    },
+    statsContainer: {
+      flexDirection: 'row',
+      justifyContent: "center",
+      gap: 10,
+      marginBottom: 25,
+    },
+    statCard: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 16,
+      padding: 16,
+      width: '23%',
+      alignItems: 'center',
+      elevation: 3,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    statNumber: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: colors.primary,
+      marginBottom: 5,
+    },
+    statLabel: {
+      fontSize: 11,
+      color: colors.subtext,
+      textAlign: 'center',
+      lineHeight: 14,
+    },
+    progressCard: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 16,
+      padding: 20,
+      marginBottom: 20,
+      elevation: 3,
+    },
+    progressHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 15,
+    },
+    progressTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: colors.text,
+    },
+    progressPercentage: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: colors.primary,
+    },
+    progressBar: {
+      height: 8,
+      backgroundColor: colors.background,
+      borderRadius: 4,
+      marginBottom: 15,
+    },
+    progressFill: {
+      height: '100%',
+      backgroundColor: colors.primary,
+      borderRadius: 4,
+    },
+    progressDetails: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 15,
+    },
+    progressDetail: {
+      alignItems: 'center',
+    },
+    progressDetailNumber: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: colors.text,
+    },
+    progressDetailLabel: {
+      fontSize: 12,
+      color: colors.subtext,
+      marginTop: 2,
+    },
+    honorsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    honorBadge: {
+      backgroundColor: `${colors.primary}20`,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: colors.primary,
+    },
+    honorText: {
+      fontSize: 12,
+      color: colors.primary,
       fontWeight: '500',
     },
     paymentCard: {
       backgroundColor: colors.cardBackground,
-      borderRadius: 12,
-      padding: 15,
+      borderRadius: 16,
+      padding: 18,
       marginBottom: 15,
-      elevation: 2,
+      elevation: 3,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
     },
     paymentRow: {
       flexDirection: 'row',
@@ -157,12 +338,24 @@ const Profile = () => {
     paymentMethod: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginTop: 5,
+      marginTop: 8,
     },
     paymentMethodText: {
       marginLeft: 8,
       fontSize: 14,
       color: colors.subtext,
+    },
+    paymentButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      padding: 15,
+      marginTop: 12,
+      alignItems: 'center',
+    },
+    paymentButtonText: {
+      color: colors.buttonText,
+      fontWeight: '600',
+      fontSize: 16,
     },
     quickLinksContainer: {
       flexDirection: 'row',
@@ -173,41 +366,55 @@ const Profile = () => {
     quickLink: {
       width: '48%',
       backgroundColor: colors.cardBackground,
-      borderRadius: 12,
-      padding: 15,
+      borderRadius: 16,
+      padding: 16,
       marginBottom: 15,
       flexDirection: 'row',
       alignItems: 'center',
-      elevation: 2,
+      elevation: 3,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
     },
     quickLinkIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: 12,
     },
     quickLinkText: {
       fontSize: 14,
-      fontWeight: '500',
+      fontWeight: '600',
       color: colors.text,
       flex: 1,
     },
     activityCard: {
       backgroundColor: colors.cardBackground,
-      borderRadius: 12,
-      padding: 15,
+      borderRadius: 16,
+      padding: 18,
       marginBottom: 15,
-      elevation: 2,
+      elevation: 3,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
     },
     activityHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 8,
+      marginBottom: 10,
     },
     activityIcon: {
-      marginRight: 10,
+      backgroundColor: `${colors.primary}20`,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
     },
     activityTitle: {
       fontSize: 16,
@@ -222,187 +429,252 @@ const Profile = () => {
     activityCourse: {
       fontSize: 13,
       color: colors.subtext,
+      fontWeight: '500',
     },
     activityTime: {
       fontSize: 13,
       color: colors.subtext,
     },
-    darkModeToggle: {
+    settingsCard: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 16,
+      padding: 18,
+      marginBottom: 25,
+      elevation: 3,
+    },
+    settingsRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.cardBackground,
-      borderRadius: 12,
-      padding: 15,
-      marginBottom: 25,
-      elevation: 2,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.background,
     },
-    darkModeText: {
+    settingsIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: `${colors.primary}20`,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 15,
+    },
+    settingsText: {
       fontSize: 16,
       fontWeight: '500',
       color: colors.text,
-      marginLeft: 12,
       flex: 1,
+    },
+    notificationBadge: {
+      position: 'absolute',
+      top: 15,
+      right: 15,
+      backgroundColor: '#F44336',
+      borderRadius: 12,
+      width: 24,
+      height: 24,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    notificationText: {
+      color: '#FFF',
+      fontSize: 12,
+      fontWeight: 'bold',
     },
   });
 
+  const progressPercentage = (academicProgress.completedCredits / academicProgress.totalCredits) * 100;
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Enhanced Portal Header with Title */}
-      <View style={styles.portalHeader}>
-        <Text style={styles.portalTitle}>Software Engineer</Text>
-        <Text style={styles.portalSubtitle}>Building innovative solutions through code and creativity</Text>
-        <TouchableOpacity style={styles.notificationIcon}>
-          <MaterialIcons name="notifications" size={24} color={colors.primary} />
-        </TouchableOpacity>
-      </View>
-
-      
-
-      {/* Portal Stats */}
-      <Text style={styles.sectionTitle}>Portal Overview</Text>
-      <View style={styles.portalStats}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{portalStats.announcements}</Text>
-          <Text style={styles.statLabel}>New Announcements</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{portalStats.upcomingDeadlines}</Text>
-          <Text style={styles.statLabel}>Upcoming Deadlines</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{portalStats.newResources}</Text>
-          <Text style={styles.statLabel}>New Resources</Text>
-        </View>
-      </View>
-
-      {/* Quick Links */}
-      <Text style={styles.sectionTitle}>Quick Links</Text>
-      <View style={styles.quickLinksContainer}>
-        {quickLinks.map(link => (
-          <TouchableOpacity key={link.id} style={styles.quickLink}>
-            <View style={[styles.quickLinkIcon, { backgroundColor: `${link.color}20` }]}>
-              <MaterialIcons name={link.icon as any} size={20} color={link.color} />
+      {/* Banner with Profile Card */}
+      <View style={styles.bannerContainer}>
+        <Image source={{ uri: studentInfo.bannerImage }} style={styles.bannerImage} />
+        <View style={styles.bannerOverlay} />
+        
+        <View style={styles.profileCard}>
+          <View style={styles.gpaContainer}>
+            <Text style={styles.gpaText}>GPA {studentInfo.gpa}</Text>
+          </View>
+          
+          <View style={styles.notificationBadge}>
+            <Text style={styles.notificationText}>5</Text>
+          </View>
+          
+          <View style={styles.profileHeader}>
+            <Image source={{ uri: studentInfo.profileImage }} style={styles.profileImage} />
+            <View style={styles.profileInfo}>
+              <Text style={styles.studentName}>{studentInfo.name}</Text>
+              <Text style={styles.studentId}>{studentInfo.studentId}</Text>
+              <Text style={styles.studentProgram}>{studentInfo.program}</Text>
+              <Text style={styles.studentYear}>{studentInfo.year}</Text>
             </View>
-            <Text style={styles.quickLinkText}>{link.name}</Text>
-            <MaterialIcons name="chevron-right" size={20} color={colors.subtext} />
+          </View>
+          
+          <View style={styles.studentDetails}>
+            <View style={styles.detailItem}>
+              <MaterialIcons name="email" size={16} color={colors.primary} style={styles.detailIcon} />
+              <Text style={styles.detailText}>{studentInfo.email}</Text>
+            </View>
+            <View style={styles.detailItem}>
+              <MaterialIcons name="phone" size={16} color={colors.primary} style={styles.detailIcon} />
+              <Text style={styles.detailText}>{studentInfo.phone}</Text>
+            </View>
+            <View style={styles.detailItem}>
+              <MaterialIcons name="person" size={16} color={colors.primary} style={styles.detailIcon} />
+              <Text style={styles.detailText}>Advisor: {studentInfo.advisor}</Text>
+            </View>
+            <View style={styles.detailItem}>
+              <MaterialIcons name="calendar-today" size={16} color={colors.primary} style={styles.detailIcon} />
+              <Text style={styles.detailText}>Grad: {studentInfo.expectedGraduation}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.scrollContent}>
+        {/* Portal Stats */}
+        <Text style={styles.sectionTitle}>Portal Overview</Text>
+        <View style={styles.statsContainer}>
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>{portalStats.announcements}</Text>
+            <Text style={styles.statLabel}>New Announcements</Text>
+          </View>
+          
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>{portalStats.newResources}</Text>
+            <Text style={styles.statLabel}>New Resources</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>{portalStats.coursesEnrolled}</Text>
+            <Text style={styles.statLabel}>Courses Enrolled</Text>
+          </View>
+        </View>
+
+        {/* Academic Progress */}
+        <Text style={styles.sectionTitle}>Academic Progress</Text>
+        <View style={styles.progressCard}>
+          <View style={styles.progressHeader}>
+            <Text style={styles.progressTitle}>Degree Progress</Text>
+            <Text style={styles.progressPercentage}>{progressPercentage.toFixed(0)}%</Text>
+          </View>
+          
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: `${progressPercentage}%` }]} />
+          </View>
+          
+          <View style={styles.progressDetails}>
+            <View style={styles.progressDetail}>
+              <Text style={styles.progressDetailNumber}>{academicProgress.completedCredits}</Text>
+              <Text style={styles.progressDetailLabel}>Completed</Text>
+            </View>
+            <View style={styles.progressDetail}>
+              <Text style={styles.progressDetailNumber}>{academicProgress.currentSemesterCredits}</Text>
+              <Text style={styles.progressDetailLabel}>Current Semester</Text>
+            </View>
+            <View style={styles.progressDetail}>
+              <Text style={styles.progressDetailNumber}>{academicProgress.totalCredits - academicProgress.completedCredits}</Text>
+              <Text style={styles.progressDetailLabel}>Remaining</Text>
+            </View>
+          </View>
+          
+          <View style={styles.honorsContainer}>
+            {academicProgress.honors.map((honor, index) => (
+              <View key={index} style={styles.honorBadge}>
+                <Text style={styles.honorText}>{honor}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Payment Summary */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Payment Summary</Text>
+          <TouchableOpacity>
+            <Text style={styles.viewAllText}>View All</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.paymentCard}>
+          <View style={styles.paymentRow}>
+            <Text style={styles.paymentLabel}>Current Balance:</Text>
+            <Text style={[styles.paymentValue, styles.negativeAmount]}>
+              -${paymentDetails.balance.toFixed(2)}
+            </Text>
+          </View>
+          <View style={styles.paymentRow}>
+            <Text style={styles.paymentLabel}>Next Payment Due:</Text>
+            <Text style={[styles.paymentValue, styles.paymentDue]}>
+              {paymentDetails.dueDate}
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.paymentButton}>
+            <Text style={styles.paymentButtonText}>Make Payment</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Quick Links */}
+        <Text style={styles.sectionTitle}>Quick Links</Text>
+        <View style={styles.quickLinksContainer}>
+          {quickLinks.map(link => (
+            <TouchableOpacity key={link.id} style={styles.quickLink}>
+              <View style={[styles.quickLinkIcon, { backgroundColor: `${link.color}20` }]}>
+                <MaterialIcons name={link.icon as any} size={22} color={link.color} />
+              </View>
+              <Text style={styles.quickLinkText}>{link.name}</Text>
+              <MaterialIcons name="chevron-right" size={20} color={colors.subtext} />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Recent Activities */}
+        <Text style={styles.sectionTitle}>Recent Activities</Text>
+        {recentActivities.map(activity => (
+          <TouchableOpacity key={activity.id} style={styles.activityCard}>
+            <View style={styles.activityHeader}>
+              <View style={styles.activityIcon}>
+                <MaterialIcons 
+                  name={activity.icon as any} 
+                  size={18} 
+                  color={colors.primary} 
+                />
+              </View>
+              <Text style={styles.activityTitle}>{activity.title}</Text>
+            </View>
+            <View style={styles.activityMeta}>
+              <Text style={styles.activityCourse}>{activity.course}</Text>
+              <Text style={styles.activityTime}>{activity.time}</Text>
+            </View>
           </TouchableOpacity>
         ))}
-      </View>
 
-      {/* Recent Activities */}
-      <Text style={styles.sectionTitle}>Recent Activities</Text>
-      {recentActivities.map(activity => (
-        <TouchableOpacity key={activity.id} style={styles.activityCard}>
-          <View style={styles.activityHeader}>
-            <MaterialIcons 
-              name={activity.icon as any} 
-              size={20} 
-              color={colors.primary} 
-              style={styles.activityIcon} 
-            />
-            <Text style={styles.activityTitle}>{activity.title}</Text>
-          </View>
-          <View style={styles.activityMeta}>
-            <Text style={styles.activityCourse}>{activity.course}</Text>
-            <Text style={styles.activityTime}>{activity.time}</Text>
-          </View>
-        </TouchableOpacity>
-      ))}
-
-      {/* Portal Settings */}
-      <Text style={styles.sectionTitle}>Portal Settings</Text>
-      <TouchableOpacity style={styles.darkModeToggle}>
-        <MaterialCommunityIcons 
-          name="theme-light-dark" 
-          size={24} 
-          color={colors.primary} 
-        />
-        <Text style={styles.darkModeText}>Dark Mode</Text>
-        <FontAwesome name="toggle-off" size={28} color={colors.subtext} />
-      </TouchableOpacity>
-      {/* Payment Summary */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Payment Summary</Text>
-        <TouchableOpacity>
-          <Text style={styles.viewAllText}>View All</Text>
-        </TouchableOpacity>
+        {/* Settings */}
+        <Text style={styles.sectionTitle}>Settings</Text>
+        <View style={styles.settingsCard}>
+          <TouchableOpacity style={styles.settingsRow}>
+            <View style={styles.settingsIcon}>
+              <MaterialCommunityIcons name="theme-light-dark" size={20} color={colors.primary} />
+            </View>
+            <Text style={styles.settingsText}>Dark Mode</Text>
+            <FontAwesome name="toggle-off" size={24} color={colors.subtext} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.settingsRow}>
+            <View style={styles.settingsIcon}>
+              <MaterialIcons name="notifications" size={20} color={colors.primary} />
+            </View>
+            <Text style={styles.settingsText}>Notifications</Text>
+            <MaterialIcons name="chevron-right" size={20} color={colors.subtext} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={[styles.settingsRow, { borderBottomWidth: 0 }]}>
+            <View style={styles.settingsIcon}>
+              <MaterialIcons name="privacy-tip" size={20} color={colors.primary} />
+            </View>
+            <Text style={styles.settingsText}>Privacy & Security</Text>
+            <MaterialIcons name="chevron-right" size={20} color={colors.subtext} />
+          </TouchableOpacity>
+        </View>
       </View>
-      
-      <View style={styles.paymentCard}>
-        <View style={styles.paymentRow}>
-          <Text style={styles.paymentLabel}>Current Balance:</Text>
-          <Text style={[styles.paymentValue, styles.negativeAmount]}>
-            -${paymentDetails.balance.toFixed(2)}
-          </Text>
-        </View>
-        <View style={styles.paymentRow}>
-          <Text style={styles.paymentLabel}>Next Payment Due:</Text>
-          <Text style={[styles.paymentValue, styles.paymentDue]}>
-            {paymentDetails.dueDate}
-          </Text>
-        </View>
-        <TouchableOpacity style={{
-          backgroundColor: colors.primary,
-          borderRadius: 8,
-          padding: 12,
-          marginTop: 10,
-          alignItems: 'center'
-        }}>
-          <Text style={{
-            color: colors.buttonText,
-            fontWeight: '600',
-            fontSize: 16
-          }}>Make Payment</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Upcoming Payments */}
-      <Text style={styles.sectionTitle}>Upcoming Payments</Text>
-      {paymentDetails.upcomingPayments.map(payment => (
-        <View key={payment.id} style={styles.paymentCard}>
-          <View style={styles.paymentRow}>
-            <Text style={styles.paymentLabel}>{payment.description}</Text>
-            <Text style={[styles.paymentValue, styles.negativeAmount]}>
-              -${payment.amount.toFixed(2)}
-            </Text>
-          </View>
-          <View style={styles.paymentRow}>
-            <Text style={styles.paymentLabel}>Due Date:</Text>
-            <Text style={[styles.paymentValue, styles.paymentDue]}>
-              {payment.dueDate}
-            </Text>
-          </View>
-        </View>
-      ))}
-
-      {/* Recent Payments */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Recent Payments</Text>
-        <TouchableOpacity>
-          <Text style={styles.viewAllText}>View All</Text>
-        </TouchableOpacity>
-      </View>
-      
-      {paymentDetails.recentPayments.map(payment => (
-        <View key={payment.id} style={styles.paymentCard}>
-          <View style={styles.paymentRow}>
-            <Text style={styles.paymentLabel}>Amount Paid:</Text>
-            <Text style={[styles.paymentValue, styles.positiveAmount]}>
-              +${payment.amount.toFixed(2)}
-            </Text>
-          </View>
-          <View style={styles.paymentRow}>
-            <Text style={styles.paymentLabel}>Date:</Text>
-            <Text style={styles.paymentValue}>{payment.date}</Text>
-          </View>
-          <View style={styles.paymentMethod}>
-            <Ionicons name={payment.method === 'Credit Card' ? 'card' : 'cash'} 
-                     size={16} 
-                     color={colors.subtext} />
-            <Text style={styles.paymentMethodText}>{payment.method}</Text>
-          </View>
-        </View>
-      ))}
     </ScrollView>
   );
 };

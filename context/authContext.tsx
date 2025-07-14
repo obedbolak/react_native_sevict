@@ -7,6 +7,11 @@ interface User {
   name: string;
   email: string;
   role: string;
+  profilepic: {
+    public_id: string;
+    url: string;
+  };
+  
   createdAt: string;
   updatedAt: string;
   __v: number;

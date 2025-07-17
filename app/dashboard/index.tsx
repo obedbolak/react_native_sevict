@@ -80,7 +80,8 @@ const index = () => {
     paddingVertical: 10,
 backgroundColor: colors.sectionBackgroundColor,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: colors.border,
+    borderTopStartRadius: 10,
     borderTopEndRadius: 10,
   },
   navButtonsContainer: {
@@ -100,6 +101,9 @@ backgroundColor: colors.sectionBackgroundColor,
   },
   navButton: {
     alignItems: 'center',
+    
+    
+  
   },
   navButtonText: {
     fontSize: 12,

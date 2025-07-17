@@ -34,42 +34,21 @@ function ThemedApp() {
   return (
     <>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-      <Stack screenOptions={{headerShown:false}}>
-        {isAuthenticated ? (
-          <>
-            <Stack.Screen
-              name="dashboard"
-              options={{
-                headerShown: false,
-                animation: 'fade',
-              }}
-            />
-            <Stack.Screen
-              name="(auth)"
-              options={{
-                headerShown: false,
-                animation: 'fade',
-              }}
-            />
-          </>
-        ) : (
-          <>
-            <Stack.Screen
-              name="(auth)"
-              options={{
-                headerShown: false,
-                animation: 'fade',
-              }}
-            />
-            <Stack.Screen
-              name="dashboard"
-              options={{
-                headerShown: false,
-                animation: 'fade',
-              }}
-            />
-          </>
-        )}
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen
+          name="(auth)"
+          options={{
+            headerShown: false,
+            animation: 'fade',
+          }}
+        />
+        <Stack.Screen
+          name="dashboard"
+          options={{
+            headerShown: false,
+            animation: 'fade',
+          }}
+        />
         <Stack.Screen
           name="+not-found"
           options={{

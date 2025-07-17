@@ -1,6 +1,6 @@
 import { useTheme } from '@/context/themeContext';
-import { FontAwesome, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from 'react-native';
 
 const Profile = () => {
@@ -13,15 +13,36 @@ const Profile = () => {
     program: "Computer Science",
     year: "3rd Year",
     gpa: 3.8,
-    email: "alex.johnson@university.edu",
-    phone: "+1 (555) 123-4567",
-    address: "123 University Ave, Campus City",
+    email: "nson@sevichitm.edu",
+    phone: "+237 67895-4567",
+    address: "chepelle obili, Campus City",
     enrollmentDate: "September 2022",
     expectedGraduation: "May 2026",
     advisor: "Dr. Sarah Mitchell",
-    profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-    bannerImage: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=200&fit=crop"
+    
+   bannerImage: [
+  "https://picsum.photos/800/200?random=1",
+  "https://picsum.photos/800/200?random=2",
+  "https://picsum.photos/800/200?random=3",
+  "https://picsum.photos/800/200?random=4",
+  "https://picsum.photos/800/200?random=5"
+]
+    
   };
+
+//use timeout to make a carousel effect
+  const [currentIndex, setCurrentIndex] = useState(0);
+useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % studentInfo.bannerImage.length);
+    }, 5000); // Change image every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+
+   
+    
+    
 
   // Portal data
   const portalStats = {
@@ -76,11 +97,13 @@ const Profile = () => {
       position: 'relative',
       height: 200,
       marginBottom: 60,
+    
     },
     bannerImage: {
       width: '100%',
       height: '100%',
       resizeMode: 'cover',
+
     },
     bannerOverlay: {
       position: 'absolute',
@@ -207,7 +230,7 @@ const Profile = () => {
       backgroundColor: colors.cardBackground,
       borderRadius: 16,
       padding: 16,
-      width: '23%',
+      width: '30%',
       alignItems: 'center',
       elevation: 3,
       shadowColor: colors.primary,
@@ -435,51 +458,22 @@ const Profile = () => {
       fontSize: 13,
       color: colors.subtext,
     },
-    settingsCard: {
-      backgroundColor: colors.cardBackground,
-      borderRadius: 16,
-      padding: 18,
-      marginBottom: 25,
-      elevation: 3,
-    },
-    settingsRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.background,
-    },
-    settingsIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: `${colors.primary}20`,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 15,
-    },
-    settingsText: {
-      fontSize: 16,
-      fontWeight: '500',
-      color: colors.text,
-      flex: 1,
-    },
-    notificationBadge: {
-      position: 'absolute',
-      top: 15,
-      right: 15,
-      backgroundColor: '#F44336',
-      borderRadius: 12,
-      width: 24,
-      height: 24,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    notificationText: {
-      color: '#FFF',
-      fontSize: 12,
-      fontWeight: 'bold',
-    },
+      notificationBadge: {
+          position: 'absolute',
+          top: 15,
+          right: 15,
+          backgroundColor: '#F44336',
+          borderRadius: 12,
+          width: 24,
+          height: 24,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        notificationText: {
+          color: '#FFF',
+          fontSize: 12,
+          fontWeight: 'bold',
+        },
   });
 
   const progressPercentage = (academicProgress.completedCredits / academicProgress.totalCredits) * 100;
@@ -488,7 +482,7 @@ const Profile = () => {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Banner with Profile Card */}
       <View style={styles.bannerContainer}>
-        <Image source={{ uri: studentInfo.bannerImage }} style={styles.bannerImage} />
+        <Image source={{ uri: studentInfo.bannerImage?.[currentIndex] }} style={styles.bannerImage} />
         <View style={styles.bannerOverlay} />
         
         <View style={styles.profileCard}>
@@ -501,7 +495,6 @@ const Profile = () => {
           </View>
           
           <View style={styles.profileHeader}>
-            <Image source={{ uri: studentInfo.profileImage }} style={styles.profileImage} />
             <View style={styles.profileInfo}>
               <Text style={styles.studentName}>{studentInfo.name}</Text>
               <Text style={styles.studentId}>{studentInfo.studentId}</Text>
@@ -647,33 +640,7 @@ const Profile = () => {
           </TouchableOpacity>
         ))}
 
-        {/* Settings */}
-        <Text style={styles.sectionTitle}>Settings</Text>
-        <View style={styles.settingsCard}>
-          <TouchableOpacity style={styles.settingsRow}>
-            <View style={styles.settingsIcon}>
-              <MaterialCommunityIcons name="theme-light-dark" size={20} color={colors.primary} />
-            </View>
-            <Text style={styles.settingsText}>Dark Mode</Text>
-            <FontAwesome name="toggle-off" size={24} color={colors.subtext} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.settingsRow}>
-            <View style={styles.settingsIcon}>
-              <MaterialIcons name="notifications" size={20} color={colors.primary} />
-            </View>
-            <Text style={styles.settingsText}>Notifications</Text>
-            <MaterialIcons name="chevron-right" size={20} color={colors.subtext} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={[styles.settingsRow, { borderBottomWidth: 0 }]}>
-            <View style={styles.settingsIcon}>
-              <MaterialIcons name="privacy-tip" size={20} color={colors.primary} />
-            </View>
-            <Text style={styles.settingsText}>Privacy & Security</Text>
-            <MaterialIcons name="chevron-right" size={20} color={colors.subtext} />
-          </TouchableOpacity>
-        </View>
+       
       </View>
     </ScrollView>
   );

@@ -37,6 +37,8 @@ interface AuthContextType {
     success: boolean;
     error?: string;
   }>;
+  loginloading: boolean;
+  registerloading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,6 +47,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [token, setToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [loginloading, setLoginLoading] = useState(false);
+  const [registerloading, setRegisterLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
 
@@ -87,8 +91,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
-      setError(null); // Clear previous errors
+      setLoginLoading(true);
 
       const response = await axios.post<AuthResponse>("http://10.0.2.2:5000/api/v1/auth/login", {
         email,
@@ -97,7 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (response.data.success) {
         const { token: newToken, user: newUser } = response.data;
-        
+        setLoginLoading(false);
         // Store auth data securely
         await Promise.all([
           SecureStore.setItemAsync("authToken", newToken),
@@ -122,9 +125,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
-      
+      setLoginLoading(false);
       setError(errorMessage);
-      setTimeout(() => setError(null), 5000);
+      setTimeout(() => {setError(null)
+        
+      }
+      , 5000);
       throw error;
     } finally {
       setIsLoading(false);
@@ -133,8 +139,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const register = async (name: string, email: string, password: string) => {
     try {
-      setIsLoading(true);
-      setError(null);
+      setRegisterLoading(true);
 
       // Basic client-side validation
       if (!name || !email || !password) {
@@ -158,7 +163,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (response.data.success) {
         const { token: newToken, user: newUser } = response.data;
-        
+        setRegisterLoading(false);
         // Store auth data securely
         await Promise.all([
           SecureStore.setItemAsync("authToken", newToken),
@@ -189,7 +194,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } else {
         errorMessage = error.message || errorMessage;
       }
-
+      
+      setRegisterLoading(false);
       setError(errorMessage);
       setTimeout(() => setError(null), 5000);
       return { success: false, error: errorMessage };
@@ -243,6 +249,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         logout,
         register,
         clearError,
+        loginloading,
+        registerloading
       }}
     >
       {children}

@@ -6,7 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Feather, FontAwesome, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import React, { use, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
 const Settings = () => {
@@ -435,7 +435,7 @@ useEffect(() => {
       </TouchableOpacity>
 
       {/* App Version */}
-      <Text style={styles.versionText}>TechFuture Academy v1.2.0</Text>
+      <Text style={styles.versionText}>STC v1.2.0</Text>
     </ScrollView>
   );
 };

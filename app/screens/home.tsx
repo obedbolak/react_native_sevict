@@ -1,10 +1,13 @@
 import { useTheme } from '@/context/themeContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import React from 'react';
+import { router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { ImageBackground, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const Home = () => {
   const { colors } = useTheme();
+  const [currentIndex, setCurrentIndex] = useState(0);
+
 
   const styles = StyleSheet.create({
     contentContainer: {
@@ -187,6 +190,20 @@ const Home = () => {
     },
   });
 
+ const bannerImage = [
+    "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1350&q=80",
+    
+    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+  ];
+
+  //use timeout to make a carousel effect
+  useEffect(() => {
+      const interval = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % bannerImage.length);
+      }, 5000); // Change image every 5 seconds
+      return () => clearInterval(interval);
+    }, []);
+
   return (
     <View style={styles.contentContainer}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -211,7 +228,7 @@ const Home = () => {
         {/* Banner Image with Call-to-Action */}
         <TouchableOpacity style={styles.bannerContainer}>
           <ImageBackground
-            source={{ uri: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" }}
+            source={{ uri: bannerImage[currentIndex] }}
             style={styles.bannerImage}
             resizeMode="cover"
           >
@@ -228,25 +245,25 @@ const Home = () => {
         {/* Quick Access Section */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Popular Courses</Text>
+            <Text style={styles.sectionTitle}>Popular Fields</Text>
             <TouchableOpacity>
               <Text style={styles.viewAllText}>View all</Text>
             </TouchableOpacity>
           </View>
           
           <View style={styles.courseIconsContainer}>
-            <TouchableOpacity style={styles.iconContainer}>
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push('/fields/compurterEn')}>
               <View style={styles.iconBackground}>
                 <MaterialIcons name='code' size={32} color={colors.primary} />
               </View>
-              <Text style={styles.iconLabel}>Web Dev</Text>
+              <Text style={styles.iconLabel}>Computer En.</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.iconContainer}>
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push('/fields/managment')}>
               <View style={styles.iconBackground}>
                 <MaterialIcons name='phone-android' size={32} color={colors.primary} />
               </View>
-              <Text style={styles.iconLabel}>Mobile Dev</Text>
+              <Text style={styles.iconLabel}>Management</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.iconContainer}>

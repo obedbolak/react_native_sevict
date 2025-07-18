@@ -10,7 +10,7 @@ import { Alert, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, V
 
 const Settings = () => {
   const { toggleTheme, colors, isDarkMode } = useTheme();
-  const { logout, user, token,  } = useAuth();
+  const { logout, user, token, updateUser } = useAuth();
   const [image, setImage] = useState<string | null>(null);
   
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
@@ -309,18 +309,13 @@ const Settings = () => {
         },
         timeout: 10000,
       });
-
+        await updateUser(response.data.user);
       console.log('Upload successful:', response.data);
       
       // Update local state with the new image
       if (response.data?.profilepic?.url) {
         setImage(response.data.profilepic.url);
-        if (user) {
-          ({ 
-            ...user, 
-            profilepic: response.data.profilepic 
-          });
-        }
+      
       }
       
       Alert.alert('Success', 'Profile picture updated successfully!');
@@ -349,7 +344,7 @@ const Settings = () => {
         <View style={styles.avatarContainer}>
           <Image 
             source={{ 
-              uri: image || user?.profilepic?.url || defaultUser.avatar,
+              uri: image || user?.profilePic?.url ,
               cache: 'reload' 
             }} 
             style={styles.avatar} 

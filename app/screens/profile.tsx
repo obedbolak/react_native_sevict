@@ -8,7 +8,7 @@ const Profile = () => {
 
   // Student data
   const studentInfo = {
-    name: "Alex Johnson",
+    
     studentId: "STU2024-001",
     program: "Computer Science",
     year: "3rd Year",
@@ -499,7 +499,7 @@ useEffect(() => {
           
           <View style={styles.profileHeader}>
             <View style={styles.profileInfo}>
-              <Text style={styles.studentName}>{studentInfo.name}</Text>
+              
               <Text style={styles.studentId}>{studentInfo.studentId}</Text>
               <Text style={styles.studentProgram}>{studentInfo.program}</Text>
               <Text style={styles.studentYear}>{studentInfo.year}</Text>

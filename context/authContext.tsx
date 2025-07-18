@@ -7,7 +7,7 @@ interface User {
   name: string;
   email: string;
   role: string;
-  profilepic: {
+  profilePic: {
     public_id: string;
     url: string;
   };
@@ -39,6 +39,7 @@ interface AuthContextType {
   }>;
   loginloading: boolean;
   registerloading: boolean;
+  updateUser: (updatedUser: User) => Promise<void>; 
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -233,6 +234,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateUser = async (updatedUser: User) => {
+  try {
+    // Update the user in state
+    setUser(updatedUser);
+    
+    // Also update the stored user in SecureStore
+    await SecureStore.setItemAsync("authUser", JSON.stringify(updatedUser));
+    
+    console.log("User updated successfully");
+  } catch (error) {
+    console.error("Failed to update user", error);
+    setError("Failed to update user data");
+    throw error;
+  }
+};
+
   const clearError = () => {
     setError(null);
   };
@@ -240,6 +257,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   return (
     <AuthContext.Provider
       value={{
+        updateUser,
         token,
         isAuthenticated,
         isLoading,

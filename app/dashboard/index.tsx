@@ -158,7 +158,7 @@ const index = () => {
           <View style={styles.headerContainer}>
             <View style={styles.profileContainer}>
               <Image
-                source={{ uri: user?.profilepic?.url || 'https://via.placeholder.com/150' }}
+                source={{ uri: user?.profilePic?.url || 'https://via.placeholder.com/150' }}
                 style={styles.profileImage}
               />
               <View>

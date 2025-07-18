@@ -3,22 +3,16 @@ import { useAuth } from '@/context/authContext';
 import { useTheme } from '@/context/themeContext';
 import * as ImagePicker from 'expo-image-picker';
 
-import { Feather, FontAwesome, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
 const Settings = () => {
   const { toggleTheme, colors, isDarkMode } = useTheme();
-  const { logout, user } = useAuth();
+  const { logout, user, token,  } = useAuth();
   const [image, setImage] = useState<string | null>(null);
-const [imageData, setImageData] = useState<{
-  uri: string;
-  type: string;
-  fileName: string;
-} | null>(null);
-
+  
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
 
   const styles = StyleSheet.create({
@@ -26,7 +20,6 @@ const [imageData, setImageData] = useState<{
       alignItems: 'flex-end',
       marginBottom: 20,
       flexDirection: 'row',
-      
     },
     avatarTouch: {
       position: 'absolute',
@@ -39,59 +32,59 @@ const [imageData, setImageData] = useState<{
       borderRadius: 50,
       right: 0,
     },
-     settingsCard: {
-          backgroundColor: colors.cardBackground,
-          borderRadius: 16,
-          padding: 18,
-          marginBottom: 25,
-          elevation: 3,
-        },
-        settingsRow: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingVertical: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.background,
-        },
-        settingsIcon: {
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: `${colors.primary}20`,
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginRight: 15,
-        },
-        settingsText: {
-          fontSize: 16,
-          fontWeight: '500',
-          color: colors.text,
-          flex: 1,
-        },
-        notificationBadge: {
-          position: 'absolute',
-          top: 15,
-          right: 15,
-          backgroundColor: '#F44336',
-          borderRadius: 12,
-          width: 24,
-          height: 24,
-          justifyContent: 'center',
-          alignItems: 'center',
-        },
-        notificationText: {
-          color: '#FFF',
-          fontSize: 12,
-          fontWeight: 'bold',
-        },
+    settingsCard: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 16,
+      padding: 18,
+      marginBottom: 25,
+      elevation: 3,
+    },
+    settingsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.background,
+    },
+    settingsIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: `${colors.primary}20`,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 15,
+    },
+    settingsText: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: colors.text,
+      flex: 1,
+    },
+    notificationBadge: {
+      position: 'absolute',
+      top: 15,
+      right: 15,
+      backgroundColor: '#F44336',
+      borderRadius: 12,
+      width: 24,
+      height: 24,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    notificationText: {
+      color: '#FFF',
+      fontSize: 12,
+      fontWeight: 'bold',
+    },
     container: {
       flex: 1,
       backgroundColor: colors.background,
-      padding: 20,
+      paddingBottom: 20,
     },
     profileHeader: {
       alignItems: 'center',
-      marginBottom: 25,
+      
     },
     avatar: {
       width: 120,
@@ -121,7 +114,7 @@ const [imageData, setImageData] = useState<{
       marginLeft: 5,
     },
     settingsSection: {
-      backgroundColor:colors.sectionBackgroundColor,
+      backgroundColor: colors.sectionBackgroundColor,
       borderRadius: 10,
       paddingHorizontal: 15,
       marginBottom: 15,
@@ -138,7 +131,6 @@ const [imageData, setImageData] = useState<{
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },
-    
     settingsName: {
       flex: 1,
       fontSize: 16,
@@ -183,8 +175,7 @@ const [imageData, setImageData] = useState<{
     studentId: "TF20230045",
     enrolledCourses: 5,
     completedCourses: 3,
-
-    avatar: user?.profilepic?.url || "https://randomuser.me/api/portraits/men/32.jpg",
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
   };
 
   const settingsItems = [
@@ -213,11 +204,6 @@ const [imageData, setImageData] = useState<{
       ),
     },
     {
-      icon: 'lock',
-      name: 'Change Password',
-      component: <MaterialIcons name="chevron-right" size={24} color={colors.settingsValue} />,
-    },
-    {
       icon: 'language',
       name: 'Language',
       component: <Text style={styles.settingsValue}>English</Text>,
@@ -229,7 +215,7 @@ const [imageData, setImageData] = useState<{
     },
     {
       icon: 'file-text',
-      name: 'Terms & Privacy',
+      name: 'Terms & Conditions',
       component: <MaterialIcons name="chevron-right" size={24} color={colors.settingsValue} />,
     },
   ];
@@ -242,122 +228,142 @@ const [imageData, setImageData] = useState<{
     }
   };
 
- 
-    // Handle camera
-    const takePhoto = async () => {
-      try {
-        // Request permissions
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Permission Required', 'Sorry, we need camera permissions to take photos.');
-          return;
-        }
-  
-        // Take photo
-        const result = await ImagePicker.launchCameraAsync({
-          allowsEditing: true,
-          aspect: [16, 9],
-          quality: 0.8,
-        });
-  
-        if (!result.canceled && result.assets[0]) {
-          setImage(result.assets[0].uri);
-        }
-      } catch (error) {
-        Alert.alert('Error', 'Failed to take photo. Please try again.');
+  const takePhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Sorry, we need camera permissions to take photos.');
+        return;
       }
-    };
 
-const pickImage = async () => {
-  try {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to pick images.');
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets?.[0]) {
+        const selectedImage = result.assets[0];
+        setImage(selectedImage.uri);
+        
+        
+        
+        return ;
+      }
+      return null;
+    } catch (error) {
+      console.error('Camera Error:', error);
+      Alert.alert('Error', 'Failed to take photo. Please try again.');
       return null;
     }
+  };
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.8,
-    });
+  const pickImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to pick images.');
+        return null;
+      }
 
-    if (!result.canceled && result.assets[0]) {
-      const selectedImage = result.assets[0];
-      setImage(selectedImage.uri);
-      
-      const imageInfo = {
-        uri: selectedImage.uri,
-        type: selectedImage.type || 'image/jpeg',
-        fileName: selectedImage.fileName || `image-${Date.now()}.jpg`
-      };
-      
-      setImageData(imageInfo);
-      return imageInfo;
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets?.[0]) {
+        const selectedImage = result.assets[0];
+        setImage(selectedImage.uri);
+        
+        await handleUpdateProfile(selectedImage.uri);
+      }
+    } catch (error) {
+      console.error('Image Picker Error:', error);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
+      return null;
     }
-    return null;
-  } catch (error) {
-    Alert.alert('Error', 'Failed to pick image. Please try again.');
-    return null;
-  }
-};
+  };
 
-const handleUpdateProfile = async () => {
-  if (!imageData) {
-    console.log('No image data available');
-    return;
-  }
-
-  try {
-    const formData = new FormData();
-    
-    // Correct way to append file in React Native
-    formData.append('image', {
-      uri: imageData.uri,
-      type: imageData.type,
-      name: imageData.fileName
-    } as any); // Type assertion needed for React Native FormData
-
-    const token = await AsyncStorage.getItem('userToken');
-    if (!token) {
+  const handleUpdateProfile = async (imageUri: string) => {
+    if (!token || !user?._id) {
       Alert.alert('Error', 'Authentication required');
       return;
     }
 
-    const response = await axios.put(
-      `https://10.0.2.2:5000/api/v1/auth/profile-picture-update/${user?._id}`,
-      formData,
-      {
+    try {
+      const formData = new FormData();
+      formData.append('file', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: `profile-${Date.now()}.jpg`,
+      } as any);
+
+      const apiUrl = `http://10.0.2.2:5000/api/v1/auth/profile-picture-update/${user._id}`;
+      
+      const response = await axios.put(apiUrl, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
+        timeout: 10000,
+      });
+
+      console.log('Upload successful:', response.data);
+      
+      // Update local state with the new image
+      if (response.data?.profilepic?.url) {
+        setImage(response.data.profilepic.url);
+        if (user) {
+          ({ 
+            ...user, 
+            profilepic: response.data.profilepic 
+          });
+        }
       }
-    );
+      
+      Alert.alert('Success', 'Profile picture updated successfully!');
+    } catch (error) {
+      console.error('Upload Error:', error);
+      
+      let errorMessage = 'Failed to upload image. Please try again.';
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          errorMessage = error.response.data?.message || errorMessage;
+        } else if (error.request) {
+          errorMessage = 'Network error. Please check your connection.';
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Error', errorMessage);
+    }
+  };
 
-    console.log('Upload successful:', response.data);
-    Alert.alert('Success', 'Avatar uploaded successfully!');
-    
-  } catch (error) {
-    console.error('Upload failed:', error);
-    Alert.alert('Error', 'Failed to upload image. Please try again.');
-  }
-};
-
-useEffect(() => {
-  if (imageData) {
-    handleUpdateProfile();
-  }
-}, [imageData]);
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.profileHeader}>
         <View style={styles.avatarContainer}>
-        <Image source={{ uri: defaultUser.avatar }} style={styles.avatar} />
-        <TouchableOpacity style={styles.avatarTouch} onPress={pickImage}>
-        <Image source={require('../../assets/images/imageupload.png')} style={styles.avatarupload} />
-        </TouchableOpacity>
+          <Image 
+            source={{ 
+              uri: image || user?.profilepic?.url || defaultUser.avatar,
+              cache: 'reload' 
+            }} 
+            style={styles.avatar} 
+          />
+          <TouchableOpacity style={styles.avatarTouch} onPress={pickImage}>
+            { isDarkMode ? (<Image 
+              source={require('../../assets/images/pro1.png')} 
+              style={[styles.avatarupload, {backgroundColor: colors.primary}]} 
+            />):(<Image 
+              source={require('../../assets/images/pro1.png')} 
+              style={[styles.avatarupload,]} 
+            />)}
+            
+          </TouchableOpacity>
         </View>
         <Text style={styles.userName}>{defaultUser.name}</Text>
         <Text style={styles.userEmail}>{defaultUser.email}</Text>
@@ -366,7 +372,7 @@ useEffect(() => {
       {/* Account Section */}
       <Text style={styles.sectionTitle}>Account</Text>
       <View style={styles.settingsSection}>
-        {settingsItems.slice(0, 4).map((item, index) => (
+        {settingsItems.slice(0, 3).map((item, index) => (
           <TouchableOpacity key={index} style={styles.settingsItem}>
             <View style={styles.settingsIcon}>
               {item.icon === 'notifications' || item.icon === 'lock' || item.icon === 'language' ? (
@@ -388,7 +394,7 @@ useEffect(() => {
       {/* Support Section */}
       <Text style={styles.sectionTitle}>Support</Text>
       <View style={styles.settingsSection}>
-        {settingsItems.slice(4).map((item, index) => (
+        {settingsItems.slice(3).map((item, index) => (
           <TouchableOpacity key={index} style={styles.settingsItem}>
             <View style={styles.settingsIcon}>
               <Feather name={item.icon as any} size={20} color={colors.primary} />
@@ -401,33 +407,25 @@ useEffect(() => {
         ))}
       </View>
 
-       {/* Settings */}
-        <Text style={styles.sectionTitle}>Settings</Text>
-        <View style={styles.settingsCard}>
-          <TouchableOpacity style={styles.settingsRow}>
-            <View style={styles.settingsIcon}>
-              <MaterialCommunityIcons name="theme-light-dark" size={20} color={colors.primary} />
-            </View>
-            <Text style={styles.settingsText}>Dark Mode</Text>
-            <FontAwesome name="toggle-off" size={24} color={colors.subtext} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.settingsRow}>
-            <View style={styles.settingsIcon}>
-              <MaterialIcons name="notifications" size={20} color={colors.primary} />
-            </View>
-            <Text style={styles.settingsText}>Notifications</Text>
-            <MaterialIcons name="chevron-right" size={20} color={colors.subtext} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={[styles.settingsRow, { borderBottomWidth: 0 }]}>
-            <View style={styles.settingsIcon}>
-              <MaterialIcons name="privacy-tip" size={20} color={colors.primary} />
-            </View>
-            <Text style={styles.settingsText}>Privacy & Security</Text>
-            <MaterialIcons name="chevron-right" size={20} color={colors.subtext} />
-          </TouchableOpacity>
-        </View>
+      {/* Settings */}
+      <Text style={styles.sectionTitle}>Settings</Text>
+      <View style={styles.settingsCard}>
+        <TouchableOpacity style={styles.settingsRow}>
+          <View style={styles.settingsIcon}>
+            <MaterialIcons name="lock" size={20} color={colors.primary} />
+          </View>
+          <Text style={styles.settingsText}> Change Password</Text>
+          <MaterialIcons name="chevron-right" size={20} color={colors.subtext} />
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={[styles.settingsRow, { borderBottomWidth: 0 }]}>
+          <View style={styles.settingsIcon}>
+            <MaterialIcons name="privacy-tip" size={20} color={colors.primary} />
+          </View>
+          <Text style={styles.settingsText}>Privacy & Security</Text>
+          <MaterialIcons name="chevron-right" size={20} color={colors.subtext} />
+        </TouchableOpacity>
+      </View>
 
       {/* Logout Button */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

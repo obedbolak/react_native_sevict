@@ -14,7 +14,7 @@ const Home = () => {
       flex: 1,
       backgroundColor: colors.background,
       paddingHorizontal: 5,
-      paddingTop: 20,
+      paddingTop: 10,
     },
     headerContainer: {
       marginBottom: 20,

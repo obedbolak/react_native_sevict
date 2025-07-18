@@ -1,100 +1,101 @@
 import { useTheme } from '@/context/themeContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const ComputerEngineeringScreen = () => {
+const { width } = Dimensions.get('window');
+
+const Homepage = () => {
   const { colors } = useTheme();
 
-  const handleResourcePress = (resourceType: string) => {
-    // TODO: Implement navigation to specific resource
-    console.log(`Opening ${resourceType}`);
+  const categories = [
+    {
+      id: 1,
+      title: 'Food & Dining',
+      icon: 'food-fork-drink',
+      color: '#FF6B6B',
+      description: 'Discover local restaurants and cuisines'
+    },
+    {
+      id: 2,
+      title: 'Shopping',
+      icon: 'shopping',
+      color: '#4ECDC4',
+      description: 'Browse amazing deals and products'
+    },
+    {
+      id: 3,
+      title: 'Entertainment',
+      icon: 'movie',
+      color: '#45B7D1',
+      description: 'Movies, shows & entertainment events'
+    },
+    {
+      id: 4,
+      title: 'Health & Fitness',
+      icon: 'dumbbell',
+      color: '#96CEB4',
+      description: 'Stay healthy and maintain active lifestyle'
+    },
+    {
+      id: 5,
+      title: 'Travel',
+      icon: 'airplane',
+      color: '#FFEAA7',
+      description: 'Explore new destinations and adventures'
+    },
+    {
+      id: 6,
+      title: 'Education',
+      icon: 'school',
+      color: '#DDA0DD',
+      description: 'Learn something new and expand knowledge'
+    }
+  ];
+
+  const handleCategoryPress = (category:any) => {
+    console.log('Category pressed:', category.title);
+    // Add navigation logic here
   };
 
-  interface SpecializationCardProps {
-    title: string;
-    description: string;
-    icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
-  }
+  const handleGetStarted = () => {
+    console.log('Get Started pressed');
+    // Add navigation logic here
+  };
 
-  const renderSpecializationCard = (
-    title: SpecializationCardProps['title'],
-    description: SpecializationCardProps['description'],
-    icon: SpecializationCardProps['icon']
-  ) => (
-    <View style={[styles.specializationCard, { 
-      backgroundColor: colors.cardBackground, 
-      borderColor: colors.border,
-      shadowColor: '#000'
-    }]}>
-      <View style={styles.specializationHeader}>
+  const renderCategoryCard = (category:any) => (
+    <TouchableOpacity
+      key={category.id}
+      style={[styles.categoryCard, { 
+        backgroundColor: colors.cardBackground, 
+        borderColor: colors.border,
+        shadowColor: '#000'
+      }]}
+      onPress={() => handleCategoryPress(category)}
+      activeOpacity={0.8}
+    >
+      <View style={[styles.categoryIconContainer, { backgroundColor: category.color }]}>
         <MaterialCommunityIcons 
-          name={icon} 
-          size={24} 
-          color={colors.primary} 
-          style={styles.specializationIcon}
+          name={category.icon} 
+          size={28} 
+          color={colors.buttonText} 
         />
-        <Text style={[styles.specializationTitle, { color: colors.text }]}>
-          {title}
-        </Text>
       </View>
-      <Text style={[styles.specializationText, { color: colors.subtext }]}>
-        {description}
+      <Text style={[styles.categoryTitle, { color: colors.text }]}>
+        {category.title}
       </Text>
-    </View>
-  );
-
-  const renderCareerItem = (title: string, description: string ) => (
-    <View style={styles.careerItem}>
-      <View style={[styles.careerBullet, { backgroundColor: colors.primary }]} />
-      <View style={styles.careerContent}>
-        <Text style={[styles.careerTitle, { color: colors.text }]}>
-          {title}
-        </Text>
-        <Text style={[styles.careerDescription, { color: colors.subtext }]}>
-          {description}
-        </Text>
-      </View>
-    </View>
-  );
-
-  interface CourseCardProps {
-    title: string;
-    code: string;
-    credits: string;
-    description: string;
-  }
-
-  const renderCourseCard = (
-    title: CourseCardProps['title'],
-    code: CourseCardProps['code'],
-    credits: CourseCardProps['credits'],
-    description: CourseCardProps['description']
-  ) => (
-    <View style={[styles.courseCard, { 
-      backgroundColor: colors.cardBackground, 
-      borderColor: colors.border,
-      shadowColor: '#000'
-    }]}>
-      <View style={styles.courseHeader}>
-        <Text style={[styles.courseTitle, { color: colors.text }]}>
-          {title}
-        </Text>
-        <View style={styles.courseDetails}>
-          <Text style={[styles.courseCode, { color: colors.primary }]}>
-            {code}
-          </Text>
-          <Text style={[styles.courseCredits, { color: colors.subtext }]}>
-            {credits} credits
-          </Text>
-        </View>
-      </View>
-      <Text style={[styles.courseDescription, { color: colors.subtext }]}>
-        {description}
+      <Text style={[styles.categoryDescription, { color: colors.subtext }]}>
+        {category.description}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -104,211 +105,171 @@ const ComputerEngineeringScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Back Button */}
-        <TouchableOpacity 
-          style={[styles.backButton, { backgroundColor: colors.cardBackground }]} 
-          onPress={() => router.back()}
-          activeOpacity={0.8}
-        >
-          <MaterialCommunityIcons 
-            name="arrow-left" 
-            size={24} 
-            color={colors.text} 
-          />
-        </TouchableOpacity>
-
         {/* Header Section */}
         <View style={[styles.header, { backgroundColor: colors.primary }]}>
           <View style={styles.headerContent}>
             <Text style={[styles.headerTitle, { color: colors.buttonText }]}>
-              Computer Engineering
+              Welcome to Your App
             </Text>
             <Text style={[styles.headerSubtitle, { color: colors.buttonText }]}>
-              Bridging Hardware and Software Innovation
+              Discover amazing experiences and connect with what matters most
             </Text>
+            <TouchableOpacity 
+              style={[styles.heroButton, { backgroundColor: colors.cardBackground }]}
+              onPress={handleGetStarted}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons 
+                name="rocket-launch" 
+                size={20} 
+                color={colors.primary} 
+                style={styles.buttonIcon}
+              />
+              <Text style={[styles.heroButtonText, { color: colors.primary }]}>
+                Get Started
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Overview Section */}
+        {/* Categories Section */}
         <View style={[styles.section, { backgroundColor: colors.sectionBackgroundColor }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Program Overview
+            Explore Categories
           </Text>
           <Text style={[styles.sectionText, { color: colors.text }]}>
-            Computer Engineering integrates electrical engineering principles with computer science 
-            fundamentals to design and develop advanced computing systems. Our program prepares 
-            students to tackle complex challenges in hardware design, embedded systems, and 
-            computational architecture, positioning graduates at the forefront of technological innovation.
-          </Text>
-        </View>
-
-        {/* Specializations Section */}
-        <View style={[styles.section, { backgroundColor: colors.sectionBackgroundColor }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Specialization Areas
+            Find exactly what you're looking for with our carefully curated categories. 
+            Each section is designed to help you discover new experiences and connect 
+            with services that matter most to you.
           </Text>
           
-          <View style={styles.specializationContainer}>
-            {renderSpecializationCard(
-              "Hardware Systems Design",
-              "Focus on microprocessor design, VLSI circuits, and computer architecture optimization.",
-              "memory"
-            )}
-            
-            {renderSpecializationCard(
-              "Embedded Systems",
-              "Develop real-time systems for IoT, automotive, and industrial applications.",
-              "chip"
-            )}
-            
-            {renderSpecializationCard(
-              "Network & Communications",
-              "Design secure, high-performance network infrastructure and communication protocols.",
-              "network"
-            )}
-            
-            {renderSpecializationCard(
-              "Digital Signal Processing",
-              "Apply advanced algorithms for multimedia, telecommunications, and data analysis.",
-              "waveform"
-            )}
+          <View style={styles.categoriesGrid}>
+            {categories.map(category => renderCategoryCard(category))}
           </View>
         </View>
 
-        {/* Career Paths Section */}
+        {/* Features Section */}
         <View style={[styles.section, { backgroundColor: colors.sectionBackgroundColor }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Career Opportunities
+            Why Choose Our App?
           </Text>
           
-          {renderCareerItem(
-            "Hardware Design Engineer",
-            "Develop cutting-edge processors, memory systems, and specialized computing hardware"
-          )}
+          <View style={styles.featureItem}>
+            <View style={[styles.featureBullet, { backgroundColor: colors.primary }]} />
+            <View style={styles.featureContent}>
+              <Text style={[styles.featureTitle, { color: colors.text }]}>
+                Personalized Experience
+              </Text>
+              <Text style={[styles.featureDescription, { color: colors.subtext }]}>
+                Get recommendations tailored to your preferences and interests
+              </Text>
+            </View>
+          </View>
           
-          {renderCareerItem(
-            "Systems Architect",
-            "Design large-scale computing infrastructure and enterprise system architectures"
-          )}
+          <View style={styles.featureItem}>
+            <View style={[styles.featureBullet, { backgroundColor: colors.primary }]} />
+            <View style={styles.featureContent}>
+              <Text style={[styles.featureTitle, { color: colors.text }]}>
+                Easy Navigation
+              </Text>
+              <Text style={[styles.featureDescription, { color: colors.subtext }]}>
+                Intuitive interface designed for seamless user experience
+              </Text>
+            </View>
+          </View>
           
-          {renderCareerItem(
-            "Embedded Systems Engineer",
-            "Create intelligent systems for automotive, aerospace, and consumer electronics"
-          )}
+          <View style={styles.featureItem}>
+            <View style={[styles.featureBullet, { backgroundColor: colors.primary }]} />
+            <View style={styles.featureContent}>
+              <Text style={[styles.featureTitle, { color: colors.text }]}>
+                Real-time Updates
+              </Text>
+              <Text style={[styles.featureDescription, { color: colors.subtext }]}>
+                Stay informed with live updates and notifications
+              </Text>
+            </View>
+          </View>
           
-          {renderCareerItem(
-            "Network Infrastructure Engineer",
-            "Build and optimize high-performance network systems and cybersecurity solutions"
-          )}
-          
-          {renderCareerItem(
-            "Research & Development Engineer",
-            "Pioneer next-generation computing technologies and emerging hardware solutions"
-          )}
+          <View style={styles.featureItem}>
+            <View style={[styles.featureBullet, { backgroundColor: colors.primary }]} />
+            <View style={styles.featureContent}>
+              <Text style={[styles.featureTitle, { color: colors.text }]}>
+                Secure & Reliable
+              </Text>
+              <Text style={[styles.featureDescription, { color: colors.subtext }]}>
+                Your data is protected with industry-standard security measures
+              </Text>
+            </View>
+          </View>
         </View>
 
-        {/* Key Courses Section */}
+        {/* Quick Actions Section */}
         <View style={[styles.section, { backgroundColor: colors.sectionBackgroundColor }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Core Curriculum
-          </Text>
-          
-          {renderCourseCard(
-            "Digital Logic Design",
-            "CE 201",
-            "4",
-            "Fundamental principles of digital circuits, Boolean algebra, and combinational logic systems"
-          )}
-          
-          {renderCourseCard(
-            "Computer Architecture",
-            "CE 301",
-            "4",
-            "Advanced study of processor design, memory hierarchies, and parallel computing systems"
-          )}
-          
-          {renderCourseCard(
-            "Operating Systems",
-            "CE 320",
-            "3",
-            "System-level programming, process management, and distributed computing concepts"
-          )}
-          
-          {renderCourseCard(
-            "VLSI Design",
-            "CE 410",
-            "4",
-            "Very Large Scale Integration design methodologies and semiconductor manufacturing processes"
-          )}
-        </View>
-
-        {/* Resources Section */}
-        <View style={[styles.section, { backgroundColor: colors.sectionBackgroundColor }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Academic Resources
+            Quick Actions
           </Text>
           
           <TouchableOpacity 
-            style={[styles.resourceButton, { backgroundColor: colors.primary }]}
-            onPress={() => handleResourcePress('Department Website')}
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
+            onPress={() => console.log('Profile pressed')}
             activeOpacity={0.8}
           >
             <MaterialCommunityIcons 
-              name="web" 
+              name="account-circle" 
               size={20} 
               color={colors.buttonText} 
-              style={styles.resourceIcon}
+              style={styles.actionIcon}
             />
-            <Text style={[styles.resourceButtonText, { color: colors.buttonText }]}>
-              Department Website
+            <Text style={[styles.actionButtonText, { color: colors.buttonText }]}>
+              My Profile
             </Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={[styles.resourceButton, { backgroundColor: colors.primary }]}
-            onPress={() => handleResourcePress('Course Catalog')}
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
+            onPress={() => console.log('Settings pressed')}
             activeOpacity={0.8}
           >
             <MaterialCommunityIcons 
-              name="book-open-variant" 
+              name="cog" 
               size={20} 
               color={colors.buttonText} 
-              style={styles.resourceIcon}
+              style={styles.actionIcon}
             />
-            <Text style={[styles.resourceButtonText, { color: colors.buttonText }]}>
-              Course Catalog
+            <Text style={[styles.actionButtonText, { color: colors.buttonText }]}>
+              Settings
             </Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={[styles.resourceButton, { backgroundColor: colors.primary }]}
-            onPress={() => handleResourcePress('Faculty Directory')}
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
+            onPress={() => console.log('Support pressed')}
             activeOpacity={0.8}
           >
             <MaterialCommunityIcons 
-              name="account-group" 
+              name="help-circle" 
               size={20} 
               color={colors.buttonText} 
-              style={styles.resourceIcon}
+              style={styles.actionIcon}
             />
-            <Text style={[styles.resourceButtonText, { color: colors.buttonText }]}>
-              Faculty Directory
+            <Text style={[styles.actionButtonText, { color: colors.buttonText }]}>
+              Help & Support
             </Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={[styles.resourceButton, { backgroundColor: colors.primary }]}
-            onPress={() => handleResourcePress('Research Labs')}
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
+            onPress={() => console.log('About pressed')}
             activeOpacity={0.8}
           >
             <MaterialCommunityIcons 
-              name="flask" 
+              name="information" 
               size={20} 
               color={colors.buttonText} 
-              style={styles.resourceIcon}
+              style={styles.actionIcon}
             />
-            <Text style={[styles.resourceButtonText, { color: colors.buttonText }]}>
-              Research Laboratories
+            <Text style={[styles.actionButtonText, { color: colors.buttonText }]}>
+              About Us
             </Text>
           </TouchableOpacity>
         </View>
@@ -327,25 +288,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 20,
   },
-  backButton: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 80,
+    paddingTop: 40,
     paddingBottom: 32,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
@@ -366,6 +311,28 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     textAlign: 'center',
     fontWeight: '400',
+    marginBottom: 24,
+  },
+  heroButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  buttonIcon: {
+    marginRight: 8,
+  },
+  heroButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   section: {
     marginHorizontal: 16,
@@ -389,103 +356,72 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     fontWeight: '400',
     letterSpacing: 0.2,
+    marginBottom: 20,
   },
-  specializationContainer: {
+  categoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     marginTop: 8,
   },
-  specializationCard: {
+  categoryCard: {
+    width: (width - 82) / 2,
     padding: 20,
     borderRadius: 12,
     marginBottom: 16,
+    alignItems: 'center',
     borderWidth: 1,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
-  specializationHeader: {
-    flexDirection: 'row',
+  categoryIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
   },
-  specializationIcon: {
-    marginRight: 12,
-  },
-  specializationTitle: {
-    fontSize: 18,
+  categoryTitle: {
+    fontSize: 16,
     fontWeight: '600',
-    flex: 1,
+    textAlign: 'center',
+    marginBottom: 6,
   },
-  specializationText: {
-    fontSize: 15,
-    lineHeight: 22,
+  categoryDescription: {
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 16,
     fontWeight: '400',
   },
-  careerItem: {
+  featureItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 20,
   },
-  careerBullet: {
+  featureBullet: {
     width: 8,
     height: 8,
     borderRadius: 4,
     marginRight: 16,
     marginTop: 6,
   },
-  careerContent: {
+  featureContent: {
     flex: 1,
   },
-  careerTitle: {
+  featureTitle: {
     fontSize: 17,
     fontWeight: '600',
     marginBottom: 4,
   },
-  careerDescription: {
+  featureDescription: {
     fontSize: 15,
     lineHeight: 21,
     fontWeight: '400',
   },
-  courseCard: {
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  courseHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  courseTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    flex: 1,
-    marginRight: 12,
-  },
-  courseDetails: {
-    alignItems: 'flex-end',
-  },
-  courseCode: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  courseCredits: {
-    fontSize: 13,
-    fontWeight: '400',
-  },
-  courseDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '400',
-  },
-  resourceButton: {
+  actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -498,14 +434,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  resourceIcon: {
+  actionIcon: {
     marginRight: 8,
   },
-  resourceButtonText: {
+  actionButtonText: {
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 0.3,
   },
 });
 
-export default ComputerEngineeringScreen;
+export default Homepage;

@@ -90,13 +90,15 @@ useEffect(() => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
-      marginBottom: 60,
+      backgroundColor: colors.background, 
+      paddingBottom: 60,
+      
     },
     bannerContainer: {
       position: 'relative',
       height: 200,
       marginBottom: 60,
+      
     
     },
     bannerImage: {
@@ -142,6 +144,7 @@ useEffect(() => {
     },
     profileInfo: {
       flex: 1,
+    
     },
     studentName: {
       fontSize: 24,

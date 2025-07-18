@@ -95,6 +95,7 @@ const Search = () => {
     container: {
       flex: 1,
       backgroundColor: colors.background,
+      paddingBottom: 20,
       
     },
     searchContainer: {
@@ -372,6 +373,7 @@ const Search = () => {
       <FlatList
         data={[]} // Empty data to make FlatList render only the ListHeaderComponent
         keyExtractor={() => 'header'}
+        showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <>
             {/* Categories */}
@@ -396,6 +398,7 @@ const Search = () => {
                   </Text>
                 </TouchableOpacity>
               )}
+              showsVerticalScrollIndicator={false}
             />
 
             {/* Results Count */}

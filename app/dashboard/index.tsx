@@ -7,7 +7,7 @@ import {
   Dimensions,
   Image, StyleSheet, Text, TouchableOpacity, View
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AddPost from "../screens/addPost";
 import Home from "../screens/home";
 import Profile from "../screens/profile";
@@ -29,11 +29,11 @@ const index = () => {
     container: {
       flex: 1,
       backgroundColor: colors.background,
-      paddingHorizontal: 10,
+      paddingHorizontal: 5,
     },
     contentContainer: {
       flex: 1,
-      paddingBottom: 90 + insets.bottom, // Account for nav height + safe area
+      paddingBottom: 50 + insets.bottom, // Account for nav height + safe area
     },
     headerContainer: {
       height: 70,
@@ -41,9 +41,10 @@ const index = () => {
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: 15,
+      paddingTop: insets.top > 0 ? 10 : 0, // Add padding only if there's a top inset
       backgroundColor: colors.sectionBackgroundColor,
       borderRadius: 10,
-      marginBottom: 10,
+      marginBottom: 1,
       elevation: 2,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
@@ -81,7 +82,7 @@ const index = () => {
     },
     bottomNavContainer: {
       position: 'absolute',
-      bottom: insets.bottom, // Respect safe area bottom
+      bottom: 0,
       left: 0,
       right: 0,
       flexDirection: 'row',
@@ -89,7 +90,7 @@ const index = () => {
       alignItems: 'center',
       paddingHorizontal: 20,
       paddingVertical: 10,
-      paddingBottom: 10 + Math.max(insets.bottom - 10, 0), // Extra padding for very large safe areas
+      paddingBottom: Math.max(insets.bottom, 10), // Ensure minimum padding
       backgroundColor: colors.sectionBackgroundColor,
       borderTopWidth: 1,
       borderTopColor: colors.border,
@@ -118,7 +119,7 @@ const index = () => {
     },
     addButton: {
       position: 'absolute',
-      bottom: 20 + insets.bottom, // Respect safe area for floating button
+      bottom: 10 + Math.max(insets.bottom, 10), // Respect safe area for floating button
       left: '53%',
       marginLeft: -27,
       backgroundColor: colors.background,
@@ -130,17 +131,34 @@ const index = () => {
       shadowOpacity: 0.2,
       shadowRadius: 4,
     },
+    // Additional styles for better safe area handling
+    safeAreaTop: {
+      height: insets.top,
+      backgroundColor: colors.background,
+    },
+    safeAreaBottom: {
+      height: insets.bottom,
+      backgroundColor: colors.sectionBackgroundColor,
+    },
+    screenWrapper: {
+      flex: 1,
+      paddingHorizontal: Math.max(insets.left, 10), // Respect left inset
+      paddingRight: Math.max(insets.right, 10), // Respect right inset
+    },
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      {/* Optional: Add explicit top safe area if needed */}
+      {insets.top > 0 && <View style={styles.safeAreaTop} />}
+      
       <View style={styles.contentContainer}>
         {/* Header Section */}
         {activeTab === "home" && (
           <View style={styles.headerContainer}>
             <View style={styles.profileContainer}>
               <Image
-                source={{ uri: "https://tse4.mm.bing.net/th/id/OIP.Gz62k7vTQNxqkz9Q6yE4NgHaHa?r=0&cb=thvnextc1&rs=1&pid=ImgDetMain&o=7&rm=3" }}
+                source={{ uri: user?.profilepic?.url || 'https://via.placeholder.com/150' }}
                 style={styles.profileImage}
               />
               <View>
@@ -154,12 +172,14 @@ const index = () => {
           </View>
         )}
 
-        {/* Screen Content */}
-        {activeTab === "home" && <Home />}
-        {activeTab === "search" && <Search />}
-        {activeTab === "profile" && <Profile />}
-        {activeTab === "settings" && <Settings />}
-        {activeTab === "addPost" && <AddPost />}
+        {/* Screen Content with Safe Area Wrapper */}
+        <View style={styles.screenWrapper}>
+          {activeTab === "home" && <Home />}
+          {activeTab === "search" && <Search />}
+          {activeTab === "profile" && <Profile />}
+          {activeTab === "settings" && <Settings />}
+          {activeTab === "addPost" && <AddPost />}
+        </View>
       </View>
 
       {/* Bottom Navigation */}
@@ -258,7 +278,7 @@ const index = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

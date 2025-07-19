@@ -24,7 +24,7 @@ import { useTheme } from '../../context/themeContext';
 const LoginScreen = () => {
   // Context hooks
   const { isDarkMode, toggleTheme, colors } = useTheme();
-  const { login, loginloading, error } = useAuth();
+  const { login, isLoading, authError } = useAuth();
   
   // State
   const [username, setUsername] = useState('');
@@ -299,9 +299,9 @@ const LoginScreen = () => {
                     </TouchableOpacity>
                   </View>
                   
-                  {error && (
+                  {authError && (
                     <View style={styles.errorContainer}>
-                      <Text style={styles.errorText}>{error}</Text>
+                      <Text style={styles.errorText}>{authError}</Text>
                       <MaterialIcons 
                         name="error" 
                         size={20} 
@@ -313,11 +313,11 @@ const LoginScreen = () => {
                   {/* Login Button */}
                   <TouchableOpacity
                     onPress={handleLogin}
-                    style={[styles.loginButton, loginloading && { opacity: 0.7 }]}
-                    disabled={loginloading}
+                    style={[styles.loginButton, isLoading && { opacity: 0.7 }]}
+                    disabled={isLoading}
                     accessibilityLabel="Login button"
                   >
-                    {loginloading ? (
+                    {isLoading ? (
                       <ActivityIndicator color={colors.buttonText} />
                     ) : (
                       <Text style={styles.loginButtonText}>Login</Text>

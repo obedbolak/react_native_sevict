@@ -1,276 +1,244 @@
-import axios from "axios";
-import * as SecureStore from "expo-secure-store";
-import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import * as SecureStore from 'expo-secure-store';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import {
+  deleteUserFromDatabase,
+  getUserFromDatabase,
+  initDatabase,
+  saveUserToDatabase,
+} from '../db/database';
+
+// Type definitions matching your server response
+interface ProfilePic {
+  public_id: string;
+  url: string;
+}
 
 interface User {
   _id: string;
   name: string;
   email: string;
   role: string;
-  profilePic: {
-    public_id: string;
-    url: string;
-  };
-  
+  profilePic: ProfilePic | null; // Make profilePic optional
   createdAt: string;
   updatedAt: string;
   __v: number;
 }
 
-interface AuthResponse {
-  success: boolean;
-  message: string;
-  token: string;
-  user: User;
+interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+  // Add any additional registration fields here
 }
 
 interface AuthContextType {
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
   user: User | null;
+  authToken: string | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>; // Updated signature RegisterData) => Promise<void>;
   logout: () => Promise<void>;
-  clearError: () => void;
-  register: (name: string, email: string, password: string) => Promise<{
-    success: boolean;
-    error?: string;
-  }>;
-  loginloading: boolean;
-  registerloading: boolean;
-  updateUser: (updatedUser: User) => Promise<void>; 
+  updateUser: (updatedUserData: Partial<User>) => Promise<void>;
+  refreshUser: () => Promise<void>;
+  authError: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loginloading, setLoginLoading] = useState(false);
-  const [registerloading, setRegisterLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  
 
-  // Load auth data on initial render
+    const isAuthenticated = !!authToken && !!user;
+
+
+  // Initialize auth state
   useEffect(() => {
-    const loadAuthData = async () => {
+    const initializeAuth = async () => {
       try {
-        const [storedToken, storedUser] = await Promise.all([
-          SecureStore.getItemAsync("authToken"),
-          SecureStore.getItemAsync("authUser")
-        ]);
-
-        if (storedToken && storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          
-          // Set all auth states together to avoid race conditions
-          setToken(storedToken);
-          setUser(parsedUser);
-          setIsAuthenticated(true);
-          
-          // Set axios default header
-          axios.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
-          
-          console.log("Auth restored from storage");
-        } else {
-          // If no stored auth data, ensure we're in unauthenticated state
-          setIsAuthenticated(false);
+        await initDatabase();
+        const token = await SecureStore.getItemAsync('authToken');
+        if (token) {
+          const storedUser = await getUserFromDatabase(token);
+          if (storedUser) {
+            setUser(storedUser);
+            setAuthToken(token);
+          }
         }
       } catch (error) {
-        console.error("Failed to load auth data", error);
-        setError("Failed to load authentication data");
-        setIsAuthenticated(false);
+        console.error('Auth initialization error:', error);
+        setAuthError('Failed to initialize authentication');
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadAuthData();
+    initializeAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const handleAuthRequest = async (url: string, body: object) => {
     try {
-      setLoginLoading(true);
-
-      const response = await axios.post<AuthResponse>("http://10.0.2.2:5000/api/v1/auth/login", {
-        email,
-        password,
+      
+      
+      const response = await fetch(`http://10.0.2.2:5000/api/v1/auth${url}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
       });
 
-      if (response.data.success) {
-        const { token: newToken, user: newUser } = response.data;
-        setLoginLoading(false);
-        // Store auth data securely
-        await Promise.all([
-          SecureStore.setItemAsync("authToken", newToken),
-          SecureStore.setItemAsync("authUser", JSON.stringify(newUser))
-        ]);
-        
-        // Update state atomically
-        setToken(newToken);
-        setUser(newUser);
-        setIsAuthenticated(true);
-        
-        // Set axios default header
-        axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
-        
-        console.log("Login successful");
-        
-        // Navigation will be handled by the layout component
-        // based on the updated isAuthenticated state
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Request failed');
       }
-    } catch (error: any) {
-      let errorMessage = "Login failed. Please try again.";
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
-      setLoginLoading(false);
-      setError(errorMessage);
-      setTimeout(() => {setError(null)
-        
-      }
-      , 5000);
+
+      return await response.json();
+    } catch (error) {
+      console.error('Auth request error:', error);
+      setAuthError(
+        error instanceof Error ? error.message : 'An error occurred'
+      );
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<void> => {
     try {
-      setRegisterLoading(true);
-
-      // Basic client-side validation
-      if (!name || !email || !password) {
-        throw new Error("All fields are required");
-      }
-
-      if (password.length < 6) {
-        throw new Error("Password must be at least 6 characters long");
-      }
-
-      const response = await axios.post<AuthResponse>(
-        "http://10.0.2.2:5000/api/v1/auth/register", 
-        { name, email, password },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          timeout: 10000,
-        }
-      );
-
-      if (response.data.success) {
-        const { token: newToken, user: newUser } = response.data;
-        setRegisterLoading(false);
-        // Store auth data securely
-        await Promise.all([
-          SecureStore.setItemAsync("authToken", newToken),
-          SecureStore.setItemAsync("authUser", JSON.stringify(newUser))
-        ]);
-        
-        // Update state atomically
-        setToken(newToken);
-        setUser(newUser);
-        setIsAuthenticated(true);
-        
-        // Set axios default header
-        axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
-        
-        console.log("Registration successful");
-        
-        return { success: true };
-      } else {
-        throw new Error(response.data.message || "Registration failed");
-      }
-    } catch (error: any) {
-      let errorMessage = "Registration failed. Please try again.";
+      const data = await handleAuthRequest('/login', { email, password });
       
-      if (error.response) {
-        errorMessage = error.response.data.message || errorMessage;
-      } else if (error.request) {
-        errorMessage = "Network error. Please check your connection.";
-      } else {
-        errorMessage = error.message || errorMessage;
-      }
+      await SecureStore.setItemAsync('authToken', data.token);
+      await saveUserToDatabase(data.user);
       
-      setRegisterLoading(false);
-      setError(errorMessage);
-      setTimeout(() => setError(null), 5000);
-      return { success: false, error: errorMessage };
-    } finally {
+      setUser(data.user);
+      setAuthToken(data.token);
+      setAuthError(null);
       setIsLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    try {
-      setIsLoading(true);
       
-      // Clear auth data from storage
-      await Promise.all([
-        SecureStore.deleteItemAsync("authToken"),
-        SecureStore.deleteItemAsync("authUser")
-      ]);
-      
-      // Reset state atomically
-      setToken(null);
-      setUser(null);
-      setIsAuthenticated(false);
-      
-      // Remove axios default header
-      delete axios.defaults.headers.common["Authorization"];
-      
-      console.log("Logout successful");
-      
-      // Navigation will be handled by the layout component
     } catch (error) {
-      console.error("Failed to logout", error);
-      setError("Failed to logout. Please try again.");
-    } finally {
-      setIsLoading(false);
+      // Error already handled in handleAuthRequest
+      throw error;
     }
   };
 
-  const updateUser = async (updatedUser: User) => {
-  try {
-    // Update the user in state
-    setUser(updatedUser);
-    
-    // Also update the stored user in SecureStore
-    await SecureStore.setItemAsync("authUser", JSON.stringify(updatedUser));
-    
-    console.log("User updated successfully");
-  } catch (error) {
-    console.error("Failed to update user", error);
-    setError("Failed to update user data");
-    throw error;
-  }
-};
+  const register = async (name: string, email: string, password: string): Promise<void> => {
+    try {
+      const responseData = await handleAuthRequest('/register', {
+        name,
+        email,
+        password,
+      });
+      
+      // Some APIs return user data directly on register, others require login
+      if (responseData.token && responseData.user) {
+        await SecureStore.setItemAsync('authToken', responseData.token);
+        await saveUserToDatabase(responseData.user);
+        
+        setUser(responseData.user);
+        setAuthToken(responseData.token);
+      } else {
+        // If register doesn't automatically log in, call login
+        await login(email, password);
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
 
-  const clearError = () => {
-    setError(null);
+  const fetchCurrentUser = async (token: string): Promise<User> => {
+    const response = await fetch('http://10.0.2.2:5000/api/v1/auth/me', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch user');
+    }
+    
+    return await response.json();
+  };
+
+  const logout = async (): Promise<void> => {
+    try {
+      if (authToken) {
+        await deleteUserFromDatabase(authToken);
+        await SecureStore.deleteItemAsync('authToken');
+      }
+      setUser(null);
+      setAuthToken(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+      setAuthError('Failed to logout');
+      throw error;
+    }
+  };
+
+  const updateUser = async (updatedUserData: Partial<User>): Promise<void> => {
+    try {
+      if (!authToken) throw new Error('Not authenticated');
+      
+      const response = await fetch('http://10.0.2.2:5000/api/v1/auth/me', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(updatedUserData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Update failed');
+      }
+
+      const updatedUser = await response.json();
+      await saveUserToDatabase(updatedUser);
+      setUser(updatedUser);
+    } catch (error) {
+      console.error('Update user error:', error);
+      setAuthError(error instanceof Error ? error.message : 'Failed to update user');
+      throw error;
+    }
+  };
+
+  const refreshUser = async (): Promise<void> => {
+    if (!authToken) return;
+    try {
+      const freshUser = await fetchCurrentUser(authToken);
+      await saveUserToDatabase(freshUser);
+      setUser(freshUser);
+    } catch (error) {
+      console.error('Refresh user error:', error);
+      setAuthError('Failed to refresh user data');
+      throw error;
+    }
+  };
+
+  const value: AuthContextType = {
+    user,
+    authToken,
+    isLoading,
+    login,
+    register,
+    logout,
+    updateUser,
+    refreshUser,
+    isAuthenticated: isAuthenticated,
+    authError,
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        updateUser,
-        token,
-        isAuthenticated,
-        isLoading,
-        error,
-        user,
-        login,
-        logout,
-        register,
-        clearError,
-        loginloading,
-        registerloading
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
@@ -278,8 +246,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };

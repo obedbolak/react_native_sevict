@@ -1,21 +1,25 @@
-// Updated Settings Component
+// Updated Settings Component with optimized re-renders
 import { useAuth } from '@/context/authContext';
 import { useTheme } from '@/context/themeContext';
-import * as ImagePicker from 'expo-image-picker';
-
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import axios from 'axios';
-import React, { useState } from 'react';
-import { Alert, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+
+interface SettingsItem {
+  icon: string;
+  name: string;
+  component: React.ReactNode;
+}
 
 const Settings = () => {
   const { toggleTheme, colors, isDarkMode } = useTheme();
-  const { logout, user, token, updateUser } = useAuth();
-  const [image, setImage] = useState<string | null>(null);
-  
-  const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+  const { logout, user, token, updateUser} = useAuth();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
-  const styles = StyleSheet.create({
+  // Memoized styles to prevent recreation on every render
+  const styles = useMemo(() => StyleSheet.create({
     avatarContainer: {
       alignItems: 'flex-end',
       marginBottom: 20,
@@ -84,7 +88,6 @@ const Settings = () => {
     },
     profileHeader: {
       alignItems: 'center',
-      
     },
     avatar: {
       width: 120,
@@ -167,18 +170,19 @@ const Settings = () => {
       marginTop: 30,
       marginBottom: 20,
     },
-  });
+  }), [colors]);
 
-  const defaultUser = {
+  // Memoized user data
+  const currentUser = useMemo(() => ({
     name: user?.name || "Alex Johnson",
     email: user?.email || "alex.johnson@techfuture.edu",
     studentId: "TF20230045",
     enrolledCourses: 5,
     completedCourses: 3,
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-  };
+  }), [user]);
 
-  const settingsItems = [
+  // Memoized settings items
+  const settingsItems = useMemo<SettingsItem[]>(() => [
     {
       icon: 'notifications',
       name: 'Notifications',
@@ -218,75 +222,18 @@ const Settings = () => {
       name: 'Terms & Conditions',
       component: <MaterialIcons name="chevron-right" size={24} color={colors.settingsValue} />,
     },
-  ];
+  ], [notificationsEnabled, isDarkMode, colors, styles.settingsValue, toggleTheme]);
 
-  const handleLogout = async () => {
+  // Memoized callbacks
+  const handleLogout = useCallback(async () => {
     try {
       await logout();
     } catch (error) {
       console.error('Logout error:', error);
     }
-  };
+  }, [logout]);
 
-  const takePhoto = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Sorry, we need camera permissions to take photos.');
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [16, 9],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets?.[0]) {
-        const selectedImage = result.assets[0];
-        setImage(selectedImage.uri);
-        
-        
-        
-        return ;
-      }
-      return null;
-    } catch (error) {
-      console.error('Camera Error:', error);
-      Alert.alert('Error', 'Failed to take photo. Please try again.');
-      return null;
-    }
-  };
-
-  const pickImage = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to pick images.');
-        return null;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [16, 9],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets?.[0]) {
-        const selectedImage = result.assets[0];
-        setImage(selectedImage.uri);
-        
-        await handleUpdateProfile(selectedImage.uri);
-      }
-    } catch (error) {
-      console.error('Image Picker Error:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
-      return null;
-    }
-  };
-
-  const handleUpdateProfile = async (imageUri: string) => {
+  const handleUpdateProfile = useCallback(async (imageUri: string) => {
     if (!token || !user?._id) {
       Alert.alert('Error', 'Authentication required');
       return;
@@ -309,19 +256,11 @@ const Settings = () => {
         },
         timeout: 10000,
       });
-        await updateUser(response.data.user);
-      console.log('Upload successful:', response.data);
       
-      // Update local state with the new image
-      if (response.data?.profilepic?.url) {
-        setImage(response.data.profilepic.url);
-      
-      }
-      
+      await updateUser(response.data.user);
       Alert.alert('Success', 'Profile picture updated successfully!');
     } catch (error) {
       console.error('Upload Error:', error);
-      
       let errorMessage = 'Failed to upload image. Please try again.';
       
       if (axios.isAxiosError(error)) {
@@ -336,33 +275,35 @@ const Settings = () => {
       
       Alert.alert('Error', errorMessage);
     }
-  };
+  }, [token, user?._id, updateUser]);
+
+  const pickImage = useCallback(async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to pick images.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets?.[0]) {
+        await handleUpdateProfile(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Image Picker Error:', error);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
+    }
+  }, [handleUpdateProfile]);
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.profileHeader}>
-        <View style={styles.avatarContainer}>
-          <Image 
-            source={{ 
-              uri: image || user?.profilePic?.url ,
-              cache: 'reload' 
-            }} 
-            style={styles.avatar} 
-          />
-          <TouchableOpacity style={styles.avatarTouch} onPress={pickImage}>
-            { isDarkMode ? (<Image 
-              source={require('../../assets/images/pro1.png')} 
-              style={[styles.avatarupload, {backgroundColor: colors.primary}]} 
-            />):(<Image 
-              source={require('../../assets/images/pro1.png')} 
-              style={[styles.avatarupload,]} 
-            />)}
-            
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.userName}>{defaultUser.name}</Text>
-        <Text style={styles.userEmail}>{defaultUser.email}</Text>
-      </View>
+      
 
       {/* Account Section */}
       <Text style={styles.sectionTitle}>Account</Text>

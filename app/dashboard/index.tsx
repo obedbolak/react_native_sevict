@@ -2,10 +2,11 @@ import { useAuth } from '@/context/authContext';
 import { useTheme } from '@/context/themeContext';
 import { Ionicons } from '@expo/vector-icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Dimensions,
-  Image, StyleSheet, Text, TouchableOpacity, View
+  Image,
+  StyleSheet, Text, TouchableOpacity, View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AddPost from "../screens/addPost";
@@ -16,16 +17,8 @@ import Settings from "../screens/settings";
 
 type Tabs = "home" | "search" | "profile" | "settings" | "addPost";
 
-const index = () => {
-
-  const { width, height } = Dimensions.get('window');
-
-  const { colors } = useTheme();
-  const [activeTab, setActiveTab] = useState<Tabs>("home");
-  const { user } = useAuth();
-  const insets = useSafeAreaInsets();
-
-  const styles = StyleSheet.create({
+const createStyles = (colors: any, insets: any, height: number, width: number) => 
+  StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.background,
@@ -33,7 +26,7 @@ const index = () => {
     },
     contentContainer: {
       flex: 1,
-      paddingBottom: 50 + insets.bottom, // Account for nav height + safe area
+      paddingBottom: 50 + insets.bottom,
     },
     headerContainer: {
       height: 70,
@@ -41,7 +34,7 @@ const index = () => {
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: 15,
-      paddingTop: insets.top > 0 ? 10 : 0, // Add padding only if there's a top inset
+      paddingTop: insets.top > 0 ? 10 : 0,
       backgroundColor: colors.sectionBackgroundColor,
       borderRadius: 10,
       marginBottom: 1,
@@ -90,7 +83,7 @@ const index = () => {
       alignItems: 'center',
       paddingHorizontal: 20,
       paddingVertical: 10,
-      paddingBottom: Math.max(insets.bottom, 10), // Ensure minimum padding
+      paddingBottom: Math.max(insets.bottom, 10),
       backgroundColor: colors.sectionBackgroundColor,
       borderTopWidth: 1,
       borderTopColor: colors.border,
@@ -99,7 +92,7 @@ const index = () => {
     },
     navButtonsContainer: {
       flexDirection: 'row',
-      gap: width * 0.1, // 10% of screen width for spacing
+      gap: width * 0.1,
       backgroundColor: colors.sectionBackgroundColor,
     },
     navIcon: {
@@ -119,7 +112,7 @@ const index = () => {
     },
     addButton: {
       position: 'absolute',
-      bottom: 10 + Math.max(insets.bottom, 10), // Respect safe area for floating button
+      bottom: 10 + Math.max(insets.bottom, 10),
       left: '53%',
       marginLeft: -27,
       backgroundColor: colors.background,
@@ -131,7 +124,6 @@ const index = () => {
       shadowOpacity: 0.2,
       shadowRadius: 4,
     },
-    // Additional styles for better safe area handling
     safeAreaTop: {
       height: insets.top,
       backgroundColor: colors.background,
@@ -142,25 +134,97 @@ const index = () => {
     },
     screenWrapper: {
       flex: 1,
-      paddingHorizontal: Math.max(insets.left, 10), // Respect left inset
-      paddingRight: Math.max(insets.right, 10), // Respect right inset
+      paddingHorizontal: Math.max(insets.left, 10),
+      paddingRight: Math.max(insets.right, 10),
     },
   });
 
+const NavButton = React.memo(({
+  iconName,
+  activeIconName,
+  label,
+  isActive,
+  onPress,
+  IconComponent
+}: {
+  iconName: string;
+  activeIconName?: string;
+  label: string;
+  isActive: boolean;
+  onPress: () => void;
+  IconComponent: React.ComponentType<any>;
+}) => {
+  const activeColor = "#2563eb";
+  const inactiveColor = "#64748b";
+  
+  return (
+    <TouchableOpacity style={{
+      alignItems: 'center',
+    }} onPress={onPress}>
+      <IconComponent
+        name={isActive ? (activeIconName || iconName) : iconName}
+        size={28}
+        color={isActive ? activeColor : inactiveColor}
+      />
+      <Text
+        style={[
+          {
+      fontSize: 12,
+      marginTop: 5,
+    },
+          { 
+            color: isActive ? activeColor : inactiveColor, 
+            fontWeight: isActive ? "bold" : "normal" 
+          },
+        ]}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+});
+
+const ScreenContent = React.memo(({ activeTab }: { activeTab: Tabs }) => {
+  switch (activeTab) {
+    case "home": return <Home />;
+    case "search": return <Search />;
+    case "profile": return <Profile />;
+    case "settings": return <Settings />;
+    case "addPost": return <AddPost />;
+    default: return <Home />;
+  }
+});
+
+const Index = React.memo(() => {
+  const { width, height } = useMemo(() => Dimensions.get('window'), []);
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const [activeTab, setActiveTab] = useState<Tabs>("home");
+  const { user } = useAuth();
+  
+  const styles = useMemo(() => 
+    createStyles(colors, insets, height, width),
+    [colors, insets, height, width]
+  );
+  
+  const setTabHome = useCallback(() => setActiveTab("home"), []);
+  const setTabSearch = useCallback(() => setActiveTab("search"), []);
+  const setTabProfile = useCallback(() => setActiveTab("profile"), []);
+  const setTabSettings = useCallback(() => setActiveTab("settings"), []);
+  const setTabAddPost = useCallback(() => setActiveTab("addPost"), []);
+
   return (
     <View style={styles.container}>
-      {/* Optional: Add explicit top safe area if needed */}
       {insets.top > 0 && <View style={styles.safeAreaTop} />}
       
       <View style={styles.contentContainer}>
-        {/* Header Section */}
         {activeTab === "home" && (
           <View style={styles.headerContainer}>
             <View style={styles.profileContainer}>
-              <Image
-                source={{ uri: user?.profilePic?.url || 'https://via.placeholder.com/150' }}
-                style={styles.profileImage}
-              />
+             {user?.profilePic?.url ? 
+  (<Image source={{ uri: user?.profilePic?.url }} style={styles.profileImage}/>) 
+  : <Image source={require('../../assets/images/profile.png')} style={styles.profileImage} />
+}
               <View>
                 <Text style={styles.greetingText}>Good morning</Text>
                 <Text style={styles.userName}>{user?.name}</Text>
@@ -172,114 +236,55 @@ const index = () => {
           </View>
         )}
 
-        {/* Screen Content with Safe Area Wrapper */}
         <View style={styles.screenWrapper}>
-          {activeTab === "home" && <Home />}
-          {activeTab === "search" && <Search />}
-          {activeTab === "profile" && <Profile />}
-          {activeTab === "settings" && <Settings />}
-          {activeTab === "addPost" && <AddPost />}
+          <ScreenContent activeTab={activeTab} />
         </View>
       </View>
 
-      {/* Bottom Navigation */}
       <View style={styles.bottomNavContainer}>
         <View style={styles.navButtonsContainer}>
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => setActiveTab("home")}
-          >
-            <Ionicons
-              name={activeTab === "home" ? "home" : "home-outline"}
-              size={28}
-              color={activeTab === "home" ? "#2563eb" : "#64748b"}
-            />
-            <Text
-              style={[
-                styles.navButtonText,
-                { 
-                  color: activeTab === "home" ? "#2563eb" : "#64748b", 
-                  fontWeight: activeTab === "home" ? "bold" : "normal" 
-                },
-              ]}
-            >
-              Home
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => setActiveTab("search")}
-          >
-            <MaterialIcons
-              name="search"
-              size={28}
-              color={activeTab === "search" ? "#2563eb" : "#64748b"}
-            />
-            <Text
-              style={[
-                styles.navButtonText,
-                { 
-                  color: activeTab === "search" ? "#2563eb" : "#64748b", 
-                  fontWeight: activeTab === "search" ? "bold" : "normal" 
-                },
-              ]}
-            >
-              Search
-            </Text>
-          </TouchableOpacity>
+          <NavButton
+            iconName="home-outline"
+            activeIconName="home"
+            label="Home"
+            isActive={activeTab === "home"}
+            onPress={setTabHome}
+            IconComponent={Ionicons}
+          />
+          <NavButton
+            iconName="search"
+            label="Search"
+            isActive={activeTab === "search"}
+            onPress={setTabSearch}
+            IconComponent={MaterialIcons}
+          />
         </View>
 
-        <TouchableOpacity style={styles.addButton} onPress={() => setActiveTab("addPost")}>
+        <TouchableOpacity style={styles.addButton} onPress={setTabAddPost}>
           <MaterialIcons name="add-circle" size={54} color="#2563eb" />
         </TouchableOpacity>
 
         <View style={styles.navButtonsContainer}>
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => setActiveTab("profile")}
-          >
-            <MaterialIcons
-              name={activeTab === "profile" ? "person" : "person-outline"}
-              size={28}
-              color={activeTab === "profile" ? "#2563eb" : "#64748b"}
-            />
-            <Text
-              style={[
-                styles.navButtonText,
-                { 
-                  color: activeTab === "profile" ? "#2563eb" : "#64748b", 
-                  fontWeight: activeTab === "profile" ? "bold" : "normal" 
-                },
-              ]}
-            >
-              Portal
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => setActiveTab("settings")}
-          >
-            <Ionicons
-              name={activeTab === "settings" ? "settings" : "settings-outline"}
-              size={28}
-              color={activeTab === "settings" ? "#2563eb" : "#64748b"}
-            />
-            <Text
-              style={[
-                styles.navButtonText,
-                { 
-                  color: activeTab === "settings" ? "#2563eb" : "#64748b", 
-                  fontWeight: activeTab === "settings" ? "bold" : "normal" 
-                },
-              ]}
-            >
-              Settings
-            </Text>
-          </TouchableOpacity>
+          <NavButton
+            iconName="person-outline"
+            activeIconName="person"
+            label="Portal"
+            isActive={activeTab === "profile"}
+            onPress={setTabProfile}
+            IconComponent={MaterialIcons}
+          />
+          <NavButton
+            iconName="settings-outline"
+            activeIconName="settings"
+            label="Settings"
+            isActive={activeTab === "settings"}
+            onPress={setTabSettings}
+            IconComponent={Ionicons}
+          />
         </View>
       </View>
     </View>
   );
-};
+});
 
-export default index;
+export default Index;

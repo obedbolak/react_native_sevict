@@ -20,7 +20,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SignupScreen = () => {
-  const { register, error, registerloading } = useAuth();
+  const { register, authError, isLoading } = useAuth();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   
@@ -47,6 +47,7 @@ const SignupScreen = () => {
 
   const handleRegister = async () => {
     Keyboard.dismiss();
+    const { username, email, password, confirmPassword } = formData;
     try {
       await register(formData.username, formData.email, formData.password);
     } catch (error) {
@@ -341,7 +342,7 @@ const SignupScreen = () => {
                     </TouchableOpacity>
                   </View>
                   
-                  {error && <Text style={styles.errorText}>{error}</Text>}
+                  {authError && <Text style={styles.errorText}>{authError}</Text>}
 
                   {/* Terms Checkbox */}
                   <View style={styles.termsContainer}>
@@ -362,11 +363,11 @@ const SignupScreen = () => {
                   {/* Register Button */}
                   <TouchableOpacity
                     onPress={handleRegister}
-                    style={[styles.registerButton, (registerloading || !acceptTerms) && styles.buttonDisabled]}
-                    disabled={registerloading || !acceptTerms}
+                    style={[styles.registerButton, (isLoading || !acceptTerms) && styles.buttonDisabled]}
+                    disabled={isLoading || !acceptTerms}
                     accessibilityLabel="Register button"
                   >
-                    {registerloading ? (
+                    {isLoading ? (
                       <ActivityIndicator color={colors.background} />
                     ) : (
                       <Text style={styles.registerButtonText}>Register</Text>

@@ -1,3 +1,7 @@
+
+
+
+
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -27,10 +31,11 @@ const LoginScreen = () => {
   const { login, isLoading, authError } = useAuth();
   
   // State
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorTimeout, setErrorTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
   
   // Layout hooks
   const insets = useSafeAreaInsets();
@@ -45,7 +50,18 @@ const LoginScreen = () => {
   // Handlers
   const handleLogin = async () => {
     Keyboard.dismiss();
-    await login(username, password);
+    await login(email, password)
+      .then(() => {
+        setEmail('');
+        setPassword('');
+      })
+      .catch((error) => {
+        if (errorTimeout) clearTimeout(errorTimeout);
+        setErrorMessage(error.message);
+        setErrorTimeout(setTimeout(() => setErrorMessage(''), 3000));
+      });
+    
+   
   };
 
   // Styles
@@ -255,8 +271,8 @@ const LoginScreen = () => {
                     />
                     <TextInput
                       placeholder="Enter Email"
-                      value={username}
-                      onChangeText={setUsername}
+                      value={email}
+                      onChangeText={setEmail}
                       style={styles.input}
                       autoCapitalize="none"
                       placeholderTextColor={colors.placeholder}
@@ -309,6 +325,11 @@ const LoginScreen = () => {
                       />
                     </View>
                   )}
+
+                  {errorMessage ?  (
+                    <Text style={styles.errorText}>{errorMessage}</Text>
+                  ):(null) }
+                    
                   
                   {/* Login Button */}
                   <TouchableOpacity

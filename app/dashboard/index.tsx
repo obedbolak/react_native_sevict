@@ -239,6 +239,7 @@ const Index = React.memo(() => {
         <View style={styles.screenWrapper}>
           <ScreenContent activeTab={activeTab} />
         </View>
+        
       </View>
 
       <View style={styles.bottomNavContainer}>
@@ -259,6 +260,32 @@ const Index = React.memo(() => {
             IconComponent={MaterialIcons}
           />
         </View>
+
+
+
+
+
+
+
+       
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         <TouchableOpacity style={styles.addButton} onPress={setTabAddPost}>
           <MaterialIcons name="add-circle" size={54} color="#2563eb" />

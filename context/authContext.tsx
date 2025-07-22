@@ -1,13 +1,6 @@
-import * as SecureStore from 'expo-secure-store';
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import {
-  deleteUserFromDatabase,
-  getUserFromDatabase,
-  initDatabase,
-  saveUserToDatabase,
-} from '../db/database';
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import { deleteUser, getUser, initDatabase, saveUser } from '../db/database';
 
-// Type definitions matching your server response
 interface ProfilePic {
   public_id: string;
   url: string;
@@ -18,17 +11,10 @@ interface User {
   name: string;
   email: string;
   role: string;
-  profilePic: ProfilePic | null; // Make profilePic optional
+  profilePic?: ProfilePic | null;
   createdAt: string;
   updatedAt: string;
   __v: number;
-}
-
-interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
-  // Add any additional registration fields here
 }
 
 interface AuthContextType {
@@ -37,11 +23,13 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>; // Updated signature RegisterData) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updatedUserData: Partial<User>) => Promise<void>;
   refreshUser: () => Promise<void>;
   authError: string | null;
+  profilePicBlob?: Uint8Array;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,39 +43,115 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
-  
+  const [profilePicBlob, setProfilePicBlob] = useState<Uint8Array | undefined>(undefined);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-    const isAuthenticated = !!authToken && !!user;
-
-
-  // Initialize auth state
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        await initDatabase();
-        const token = await SecureStore.getItemAsync('authToken');
-        if (token) {
-          const storedUser = await getUserFromDatabase(token);
-          if (storedUser) {
-            setUser(storedUser);
-            setAuthToken(token);
-          }
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        setAuthError('Failed to initialize authentication');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
+  const clearError = useCallback(() => {
+    setAuthError(null);
   }, []);
 
-  const handleAuthRequest = async (url: string, body: object) => {
+  const updateProfilePicBlob = useCallback(async () => {
     try {
+      const storedData = await getUser();
+      if (storedData?.profilePicBlob) {
+        setProfilePicBlob(storedData.profilePicBlob);
+      }
+    } catch (error) {
+      console.warn('Failed to get profile pic blob:', error);
+    }
+  }, []);
+
+  const clearAuthData = useCallback(async () => {
+    try {
+      await deleteUser();
+      setUser(null);
+      setAuthToken(null);
+      setProfilePicBlob(undefined);
+      setIsAuthenticated(false);
+      setAuthError(null);
+      console.log('Auth data cleared completely');
+    } catch (error) {
+      console.error('Error clearing auth data:', error);
+      throw error;
+    }
+  }, []);
+
+  const fetchCurrentUser = useCallback(async (token: string): Promise<User> => {
+    try {
+      const response = await fetch('http://10.0.2.2:5000/api/v1/auth/get-user', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+          throw new Error('Server returned HTML instead of JSON - likely authentication failed');
+        }
+        
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch user');
+      }
       
+      const data = await response.json();
+        return data.user; // Return just the user object
+    } catch (error) {
+      console.error('fetchCurrentUser error:', error);
+      if (error instanceof SyntaxError) {
+        throw new Error('Invalid server response - token may be expired');
+      }
+      throw error;
+    }
+  }, []);
+
+  const verifyTokenInBackground = useCallback(async (token: string, currentUser: User) => {
+    try {
+      const freshUser = await fetchCurrentUser(token);
+      if (JSON.stringify(freshUser) !== JSON.stringify(currentUser)) {
+        await saveUser(freshUser, token);
+        setUser(freshUser);
+        await updateProfilePicBlob();
+      }
+    } catch (error) {
+      console.warn('Background token verification failed:', error);
+      // Don't change isAuthenticated - keep using stored data
+    }
+  }, [fetchCurrentUser, updateProfilePicBlob]);
+
+  const initializeAuth = useCallback(async () => {
+    try {
+      await initDatabase();
+      const storedData = await getUser();
+      
+      if (storedData?.token && storedData.user) {
+        setAuthToken(storedData.token);
+        setUser(storedData.user);
+        setProfilePicBlob(storedData.profilePicBlob);
+        setIsAuthenticated(true);
+        
+        // Verify token in background
+        verifyTokenInBackground(storedData.token, storedData.user);
+      } else {
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.error('Auth initialization error:', error);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [verifyTokenInBackground]);
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  const handleAuthRequest = useCallback(async (url: string, body: object) => {
+    setAuthError(null);
+    try {
       const response = await fetch(`http://10.0.2.2:5000/api/v1/auth${url}`, {
         method: 'POST',
         headers: {
@@ -97,41 +161,52 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       if (!response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+          throw new Error('Server error - please try again');
+        }
+        
         const errorData = await response.json();
         throw new Error(errorData.message || 'Request failed');
       }
 
       return await response.json();
     } catch (error) {
-      console.error('Auth request error:', error);
-      setAuthError(
-        error instanceof Error ? error.message : 'An error occurred'
-      );
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      setAuthError(errorMessage);
+      throw error;
+    }
+  }, []);
+
+  const login = useCallback(async (email: string, password: string): Promise<void> => {
+    setIsLoading(true);
+    setAuthError(null);
+    
+    try {
+      const data = await handleAuthRequest('/login', { email, password });
+      
+      if (!data.user || !data.token) {
+        throw new Error('Invalid response from server');
+      }
+      
+      await saveUser(data.user, data.token);
+      
+      setUser(data.user);
+      setAuthToken(data.token);
+      setIsAuthenticated(true);
+      await updateProfilePicBlob();
+    } catch (error) {
+      setIsAuthenticated(false);
       throw error;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [handleAuthRequest, updateProfilePicBlob]);
 
-  const login = async (email: string, password: string): Promise<void> => {
-    try {
-      const data = await handleAuthRequest('/login', { email, password });
-      
-      await SecureStore.setItemAsync('authToken', data.token);
-      await saveUserToDatabase(data.user);
-      
-      setUser(data.user);
-      setAuthToken(data.token);
-      setAuthError(null);
-      setIsLoading(false);
-      
-    } catch (error) {
-      // Error already handled in handleAuthRequest
-      throw error;
-    }
-  };
-
-  const register = async (name: string, email: string, password: string): Promise<void> => {
+  const register = useCallback(async (name: string, email: string, password: string): Promise<void> => {
+    setIsLoading(true);
+    setAuthError(null);
+    
     try {
       const responseData = await handleAuthRequest('/register', {
         name,
@@ -139,102 +214,133 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         password,
       });
       
-      // Some APIs return user data directly on register, others require login
       if (responseData.token && responseData.user) {
-        await SecureStore.setItemAsync('authToken', responseData.token);
-        await saveUserToDatabase(responseData.user);
-        
+        await saveUser(responseData.user, responseData.token);
         setUser(responseData.user);
         setAuthToken(responseData.token);
+        setIsAuthenticated(true);
+        await updateProfilePicBlob();
       } else {
-        // If register doesn't automatically log in, call login
         await login(email, password);
       }
     } catch (error) {
+      setIsAuthenticated(false);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [handleAuthRequest, login, updateProfilePicBlob]);
 
-  const fetchCurrentUser = async (token: string): Promise<User> => {
-    const response = await fetch('http://10.0.2.2:5000/api/v1/auth/me', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+  const logout = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch user');
-    }
-    
-    return await response.json();
-  };
-
-  const logout = async (): Promise<void> => {
     try {
-      if (authToken) {
-        await deleteUserFromDatabase(authToken);
-        await SecureStore.deleteItemAsync('authToken');
-      }
-      setUser(null);
-      setAuthToken(null);
+      await clearAuthData();
     } catch (error) {
-      console.error('Logout error:', error);
-      setAuthError('Failed to logout');
+      setAuthError('Failed to clear authentication data');
       throw error;
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [clearAuthData]);
 
-  const updateUser = async (updatedUserData: Partial<User>): Promise<void> => {
+ const updateUser = useCallback(
+  async (updatedUserData: Partial<User>): Promise<void> => {
+    
+    
+
     try {
       if (!authToken) throw new Error('Not authenticated');
-      
-      const response = await fetch('http://10.0.2.2:5000/api/v1/auth/me', {
+      if (!user) throw new Error('No user data available');
+
+      // Optional: Check for actual changes
+      const hasChanges = Object.keys(updatedUserData).some(
+        key => JSON.stringify(user[key as keyof User]) !== JSON.stringify(updatedUserData[key as keyof User])
+      );
+      if (!hasChanges) return;
+
+      const response = await fetch('http://10.0.2.2:5000/api/v1/auth/patch-user', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify(updatedUserData),
       });
 
       if (!response.ok) {
-        throw new Error('Update failed');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Update failed');
       }
 
-      const updatedUser = await response.json();
-      await saveUserToDatabase(updatedUser);
-      setUser(updatedUser);
-    } catch (error) {
-      console.error('Update user error:', error);
-      setAuthError(error instanceof Error ? error.message : 'Failed to update user');
-      throw error;
-    }
-  };
+      // Get the updated user data from the server
+      const apiResponse = await response.json();
+      
+      // Fetch the complete user data again to ensure we have everything
+      const completeUser = await fetchCurrentUser(authToken);
+      
+      // Save the complete user data to local storage
+      await saveUser(completeUser, authToken, profilePicBlob);
+      
+      // Update state with the fresh data
+      setUser(completeUser);
 
-  const refreshUser = async (): Promise<void> => {
-    if (!authToken) return;
+      if (updatedUserData.profilePic !== undefined) {
+        await updateProfilePicBlob();
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Update failed';
+      setAuthError(errorMessage);
+      console.error('Update user error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  },
+  [authToken, user, profilePicBlob, updateProfilePicBlob, fetchCurrentUser]
+);
+
+  const refreshUser = useCallback(async (): Promise<void> => {
+    if (!authToken || !isAuthenticated) return;
+    
+    setIsLoading(true);
+    setAuthError(null);
+
     try {
       const freshUser = await fetchCurrentUser(authToken);
-      await saveUserToDatabase(freshUser);
-      setUser(freshUser);
+      
+      if (JSON.stringify(freshUser) !== JSON.stringify(user)) {
+        await saveUser(freshUser, authToken, profilePicBlob);
+        setUser(freshUser);
+        await updateProfilePicBlob();
+      }
     } catch (error) {
-      console.error('Refresh user error:', error);
-      setAuthError('Failed to refresh user data');
-      throw error;
+      if (error instanceof Error && error.message.includes('authentication')) {
+        setIsAuthenticated(false);
+        return;
+      }
+      
+      const errorMessage = 'Failed to refresh user data';
+      setAuthError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [authToken, user, isAuthenticated, fetchCurrentUser, updateProfilePicBlob, profilePicBlob]);
 
   const value: AuthContextType = {
     user,
     authToken,
     isLoading,
+    isAuthenticated,
     login,
     register,
     logout,
     updateUser,
     refreshUser,
-    isAuthenticated: isAuthenticated,
     authError,
+    profilePicBlob,
+    clearError,
   };
 
   return (

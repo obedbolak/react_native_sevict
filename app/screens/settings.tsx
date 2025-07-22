@@ -5,7 +5,7 @@ import { Feather, MaterialIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
 interface SettingsItem {
   icon: string;
@@ -13,10 +13,13 @@ interface SettingsItem {
   component: React.ReactNode;
 }
 
-const Settings = () => {
+export default function Settings ()  {
   const { toggleTheme, colors, isDarkMode } = useTheme();
-  const { logout, user, token, updateUser} = useAuth();
+  const { logout, user, authToken, updateUser} = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  //i want to make sure i update user data when the profile picture is updated
+ 
 
   // Memoized styles to prevent recreation on every render
   const styles = useMemo(() => StyleSheet.create({
@@ -234,7 +237,7 @@ const Settings = () => {
   }, [logout]);
 
   const handleUpdateProfile = useCallback(async (imageUri: string) => {
-    if (!token || !user?._id) {
+    if (!authToken || !user?._id) {
       Alert.alert('Error', 'Authentication required');
       return;
     }
@@ -251,14 +254,14 @@ const Settings = () => {
       
       const response = await axios.put(apiUrl, formData, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'multipart/form-data',
         },
         timeout: 10000,
       });
       
       await updateUser(response.data.user);
-      Alert.alert('Success', 'Profile picture updated successfully!');
+     console.log('Profile picture updated successfully:');
     } catch (error) {
       console.error('Upload Error:', error);
       let errorMessage = 'Failed to upload image. Please try again.';
@@ -275,7 +278,7 @@ const Settings = () => {
       
       Alert.alert('Error', errorMessage);
     }
-  }, [token, user?._id, updateUser]);
+  }, [authToken, user?._id, updateUser]);
 
   const pickImage = useCallback(async () => {
     try {
@@ -303,7 +306,19 @@ const Settings = () => {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      
+     
+      <TouchableOpacity  onPress={pickImage} style={styles.profileHeader}>
+         {user?.profilePic?.url ? 
+          (<Image source={{ uri: user?.profilePic?.url }} style={styles.avatar}/>) 
+          : <Image source={require('../../assets/images/profile.png')} style={styles.avatar} />
+        }
+        <Text style={styles.userName}>{currentUser.name}</Text>
+        <Text style={styles.userEmail}>{currentUser.email}</Text>
+        <>
+          
+        </>
+
+      </TouchableOpacity>
 
       {/* Account Section */}
       <Text style={styles.sectionTitle}>Account</Text>
@@ -374,4 +389,3 @@ const Settings = () => {
   );
 };
 
-export default Settings;

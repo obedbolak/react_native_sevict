@@ -1,8 +1,16 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import * as SecureStore from 'expo-secure-store';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
+import {
+  deletePostFromDatabase,
+  getPostsCount,
+  getPostsFromDatabase,
+  initPostDatabase,
+  savePostToDatabase,
+  savePostsToDatabase,
+  updatePostInDatabase
+} from '../db/postbase'; // Import your post database functions
 
 interface PostImage {
   public_id: string;
@@ -38,6 +46,7 @@ interface PostContextType {
   deletePost: (postId: string) => Promise<void>;
   deletePostImage: (postId: string, imageId: string) => Promise<void>;
   addPostImages: (postId: string, images: string[]) => Promise<void>;
+  getPostsCount: () => Promise<number>;
 }
 
 const PostContext = createContext<PostContextType>({
@@ -51,6 +60,7 @@ const PostContext = createContext<PostContextType>({
   deletePost: async () => {},
   deletePostImage: async () => {},
   addPostImages: async () => {},
+  getPostsCount: async () => 0,
 });
 
 const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -62,18 +72,55 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   // Helper function to validate and normalize data
   const validateAndNormalizeData = (data: any): Post[] => {
-    if (data && typeof data === 'object' && 'posts' in data) {
-      return Array.isArray(data.posts) ? data.posts : [];
+  try {
+    // Handle case where data contains a 'posts' array
+    if (data && typeof data === 'object' && Array.isArray(data.posts)) {
+      return data.posts.filter((post: any) => 
+        post && 
+        typeof post === 'object' && 
+        post._id && 
+        typeof post._id === 'string'
+      );
     }
-    return Array.isArray(data) ? data : [];
-  };
+    
+    // Handle case where data is directly an array
+    if (Array.isArray(data)) {
+      return data.filter((post: any) => 
+        post && 
+        typeof post === 'object' && 
+        post._id && 
+        typeof post._id === 'string'
+      );
+    }
 
+    return [];
+  } catch (error) {
+    console.error('Data validation error:', error);
+    return [];
+  }
+};
+  // Load posts from local database
+  const loadLocalPosts = useCallback(async () => {
+    try {
+      const localPosts = await getPostsFromDatabase();
+      setPosts(localPosts);
+      console.log(`Loaded ${localPosts.length} posts from local database`);
+      
+      if (localPosts.length > 0) {
+        setLastUpdated(new Date());
+      }
+    } catch (err) {
+      console.error('Error loading local posts:', err);
+    }
+  }, []);
+
+  // Fetch posts from server and save to local database
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('https://onemarketapi.xyz/api/v1/post/get-all-post');
+      const response = await fetch('http://10.0.2.2:5000/api/v1/post/get-all-post');
       
       if (!response.ok) {
         throw new Error('Failed to fetch posts');
@@ -82,48 +129,33 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       const data = await response.json();
       const validatedPosts = validateAndNormalizeData(data);
 
+      // Save to local database
+      await savePostsToDatabase(validatedPosts);
+      
+      // Update state
       setPosts(validatedPosts);
       setLastUpdated(new Date());
 
-      // Update cache
-      await AsyncStorage.multiSet([
-        ['posts', JSON.stringify(validatedPosts)],
-        ['lastUpdated', new Date().toISOString()]
-      ]);
+      console.log(`Fetched and saved ${validatedPosts.length} posts`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
       console.error('Fetch error:', errorMessage);
+      
+      // Load from local database as fallback
+      await loadLocalPosts();
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const loadCachedData = useCallback(async () => {
-    try {
-      const [cachedPosts, cachedLastUpdated] = await AsyncStorage.multiGet(['posts', 'lastUpdated']);
-      
-      if (cachedPosts?.[1]) {
-        const parsedPosts = JSON.parse(cachedPosts[1]);
-        setPosts(validateAndNormalizeData(parsedPosts));
-      }
-
-      if (cachedLastUpdated?.[1]) {
-        setLastUpdated(new Date(cachedLastUpdated[1]));
-      }
-    } catch (err) {
-      console.error('Cache load error:', err);
-    }
-  }, []);
+  }, [loadLocalPosts]);
 
   const createPost = useCallback(
     async (post: { title: string; description: string }, images: string[]) => {
-      // Declare tempId outside try block for catch access
       const tempId = `temp-${Date.now()}`;
       try {
         // Get token if not already set
         if (!token) {
-          const storedToken = await SecureStore.getItemAsync("token");
+          const storedToken = await SecureStore.getItemAsync("authToken");
           if (storedToken) {
             setToken(storedToken);
           } else {
@@ -150,8 +182,9 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           __v: 0
         };
 
-        // Optimistically update the local state
-        setPosts(prev => [...prev, tempPost]);
+        // Optimistically update the local state and database
+        setPosts(prev => [tempPost, ...prev]);
+        await savePostToDatabase(tempPost);
 
         // Prepare FormData
         const formData = new FormData();
@@ -170,7 +203,7 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         });
 
         // Send request to server
-        const response = await fetch('https://onemarketapi.xyz/api/v1/post/create-post', {
+        const response = await fetch('http://10.0.2.2:5000/api/v1/post/create-post', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -188,20 +221,16 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
         // Replace temporary post with actual post from server
         setPosts(prev => prev.map(p => p._id === tempId ? createdPost : p));
-
-        // Update cache
-        const cachedPosts = await AsyncStorage.getItem('posts');
-        let updatedPosts: Post[] = [];
-        if (cachedPosts) {
-          updatedPosts = JSON.parse(cachedPosts);
-          updatedPosts = updatedPosts.map(p => p._id === tempId ? createdPost : p);
-        }
-        await AsyncStorage.setItem('posts', JSON.stringify(updatedPosts));
+        
+        // Update database with real post and remove temp post
+        await deletePostFromDatabase(tempId);
+        await savePostToDatabase(createdPost);
 
         return createdPost;
       } catch (error) {
         // Revert optimistic update on error
         setPosts(prev => prev.filter(p => p._id !== tempId));
+        await deletePostFromDatabase(tempId);
         
         console.error('Create post error:', error);
         Alert.alert("Error", error instanceof Error ? error.message : "Failed to create post");
@@ -213,45 +242,23 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const refreshData = useCallback(async () => {
     try {
-      // First try to get cached data
-      const cachedPosts = await AsyncStorage.getItem('posts');
-      let cachedData: Post[] = [];
-      if (cachedPosts) {
-        try {
-          cachedData = JSON.parse(cachedPosts);
-        } catch {}
-      }
-
-      // Then fetch fresh data
-      const response = await fetch('https://onemarketapi.xyz/api/v1/post/get-all-post');
-      if (!response.ok) {
-        throw new Error('Failed to refresh posts');
-      }
-
-      const data = await response.json();
-      const latestPosts = validateAndNormalizeData(data);
-
-      // Check if there are new posts
-      const cachedIds = new Set(cachedData.map(post => post._id));
-      const newPosts = latestPosts.filter((post: Post) => !cachedIds.has(post._id));
-
-      if (newPosts.length > 0) {
-        const updatedPosts = [...cachedData, ...newPosts];
-        setPosts(updatedPosts);
-        await AsyncStorage.setItem('posts', JSON.stringify(updatedPosts));
-      }
-
-      setLastUpdated(new Date());
+      // Load local data first for immediate UI update
+      await loadLocalPosts();
+      
+      // Then fetch fresh data from server
+      await fetchData();
     } catch (err) {
       console.error('Refresh error:', err);
+      // At least load local data
+      await loadLocalPosts();
     }
-  }, []);
+  }, [loadLocalPosts, fetchData]);
 
   const updatePost = useCallback(
     async (postId: string, updates: { title?: string; description?: string }, newImages?: string[]) => {
       try {
         if (!token) {
-          const storedToken = await SecureStore.getItemAsync("token");
+          const storedToken = await SecureStore.getItemAsync("authToken");
           if (storedToken) {
             setToken(storedToken);
           } else {
@@ -259,14 +266,18 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           }
         }
 
-        // Optimistically update local state
+        // Optimistically update local state and database
+        const updatedData = { ...updates, updatedAt: new Date().toISOString() };
         setPosts(prev => prev.map(post => 
-          post._id === postId ? { ...post, ...updates } : post
+          post._id === postId ? { ...post, ...updatedData } : post
         ));
+        await updatePostInDatabase(postId, updatedData);
 
-        // If no new images, just update text fields
+        // Send update to server
+        let response;
         if (!newImages || newImages.length === 0) {
-          const response = await fetch(`https://onemarketapi.xyz/api/v1/post/update-post/${postId}`, {
+          // Text-only update
+          response = await fetch(`http://10.0.2.2:5000/api/v1/post/update-post/${postId}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -274,75 +285,44 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             },
             body: JSON.stringify(updates),
           });
-
-          if (!response.ok) {
-            throw new Error('Failed to update post');
-          }
-
-          const updatedPost = await response.json();
+        } else {
+          // Update with new images
+          const formData = new FormData();
+          if (updates.title) formData.append("title", updates.title);
+          if (updates.description) formData.append("description", updates.description);
           
-          // Update state with server response
-          setPosts(prev => prev.map(post => 
-            post._id === postId ? updatedPost.post : post
-          ));
+          newImages.forEach((uri, index) => {
+            const filename = uri.split('/').pop() || `image_${index}.jpg`;
+            const type = uri.endsWith(".png") ? "image/png" : "image/jpeg";
+            
+            formData.append("files", {
+              uri,
+              name: filename,
+              type,
+            } as any);
+          });
 
-          // Update cache
-          const cachedPosts = await AsyncStorage.getItem('posts');
-          if (cachedPosts) {
-            const parsed = JSON.parse(cachedPosts);
-            const updated = parsed.map((post: Post) => 
-              post._id === postId ? updatedPost.post : post
-            );
-            await AsyncStorage.setItem('posts', JSON.stringify(updated));
-          }
-
-          return updatedPost;
+          response = await fetch(`http://10.0.2.2:5000/api/v1/post/add-post-images/${postId}`, {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            body: formData,
+          });
         }
 
-        // If there are new images, use FormData
-        const formData = new FormData();
-        if (updates.title) formData.append("title", updates.title);
-        if (updates.description) formData.append("description", updates.description);
-        
-        newImages.forEach((uri, index) => {
-          const filename = uri.split('/').pop() || `image_${index}.jpg`;
-          const type = uri.endsWith(".png") ? "image/png" : "image/jpeg";
-          
-          formData.append("files", {
-            uri,
-            name: filename,
-            type,
-          } as any);
-        });
-
-        const response = await fetch(`https://onemarketapi.xyz/api/v1/post/add-post-images/${postId}`, {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-          body: formData,
-        });
-
         if (!response.ok) {
-          throw new Error('Failed to update post with images');
+          throw new Error('Failed to update post');
         }
 
         const updatedPost = await response.json();
+        const serverPost = updatedPost.post;
         
-        // Update state with server response
+        // Update state and database with server response
         setPosts(prev => prev.map(post => 
-          post._id === postId ? updatedPost.post : post
+          post._id === postId ? serverPost : post
         ));
-
-        // Update cache
-        const cachedPosts = await AsyncStorage.getItem('posts');
-        if (cachedPosts) {
-          const parsed = JSON.parse(cachedPosts);
-          const updated = parsed.map((post: Post) => 
-            post._id === postId ? updatedPost.post : post
-          );
-          await AsyncStorage.setItem('posts', JSON.stringify(updated));
-        }
+        await savePostToDatabase(serverPost);
 
         return updatedPost;
       } catch (error) {
@@ -368,10 +348,11 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           }
         }
 
-        // Optimistically remove from local state
+        // Optimistically remove from local state and database
         setPosts(prev => prev.filter(post => post._id !== postId));
+        await deletePostFromDatabase(postId);
 
-        const response = await fetch(`https://onemarketapi.xyz/api/v1/post/delete-post/${postId}`, {
+        const response = await fetch(`http://10.0.2.2:5000/api/v1/post/delete-post/${postId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -382,15 +363,7 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           throw new Error('Failed to delete post');
         }
 
-        // Update cache
-        const cachedPosts = await AsyncStorage.getItem('posts');
-        if (cachedPosts) {
-          const parsed = JSON.parse(cachedPosts);
-          const updated = parsed.filter((post: Post) => post._id !== postId);
-          await AsyncStorage.setItem('posts', JSON.stringify(updated));
-        }
-
-        // No return value needed for Promise<void>
+        console.log('Post deleted successfully');
       } catch (error) {
         console.error('Delete post error:', error);
         Alert.alert("Error", error instanceof Error ? error.message : "Failed to delete post");
@@ -414,42 +387,46 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           }
         }
 
-        // Optimistically update local state
-        setPosts(prev => prev.map(post => 
-          post._id === postId 
-            ? { 
-                ...post, 
-                images: post.images.filter(img => img.public_id !== imageId) 
-              } 
-            : post
-        ));
+        // Optimistically update local state and database
+        const updatedPosts = posts.map(post => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              images: post.images.filter(img => img._id !== imageId),
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return post;
+        });
+        
+        setPosts(updatedPosts);
+        await updatePostInDatabase(postId, {
+          images: updatedPosts.find(p => p._id === postId)?.images || [],
+          updatedAt: new Date().toISOString()
+        });
 
-        const response = await fetch(`https://onemarketapi.xyz/api/v1/post/delete-post-image/${postId}/${imageId}`, {
+        const response = await fetch(`http://10.0.2.2:5000/api/v1/post/delete-post-image/${postId}`, {
           method: 'DELETE',
           headers: {
+            'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
+          body: JSON.stringify({ imageId }),
         });
 
         if (!response.ok) {
           throw new Error('Failed to delete post image');
         }
 
-        // Update cache
-        const cachedPosts = await AsyncStorage.getItem('posts');
-        if (cachedPosts) {
-          const parsed = JSON.parse(cachedPosts);
-          const updated = parsed.map((post: Post) => 
-            post._id === postId 
-              ? { 
-                  ...post, 
-                  images: post.images.filter(img => img.public_id !== imageId) 
-                } 
-              : post
-          );
-          await AsyncStorage.setItem('posts', JSON.stringify(updated));
-        }
+        const updatedPost = await response.json();
+        
+        // Update state and database with server response
+        setPosts(prev => prev.map(post => 
+          post._id === postId ? updatedPost.post : post
+        ));
+        await savePostToDatabase(updatedPost.post);
 
+        return updatedPost;
       } catch (error) {
         console.error('Delete post image error:', error);
         Alert.alert("Error", error instanceof Error ? error.message : "Failed to delete post image");
@@ -458,7 +435,7 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         throw error;
       }
     },
-    [token, refreshData]
+    [token, posts, refreshData]
   );
 
   const addPostImages = useCallback(
@@ -486,7 +463,7 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           } as any);
         });
 
-        const response = await fetch(`https://onemarketapi.xyz/api/v1/post/add-post-images/${postId}`, {
+        const response = await fetch(`http://10.0.2.2:5000/api/v1/post/add-post-images/${postId}`, {
           method: 'PATCH',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -500,88 +477,83 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
         const updatedPost = await response.json();
         
-        // Update state with server response
+        // Update state and database
         setPosts(prev => prev.map(post => 
           post._id === postId ? updatedPost.post : post
         ));
-
-        // Update cache
-        const cachedPosts = await AsyncStorage.getItem('posts');
-        if (cachedPosts) {
-          const parsed = JSON.parse(cachedPosts);
-          const updated = parsed.map((post: Post) => 
-            post._id === postId ? updatedPost.post : post
-          );
-          await AsyncStorage.setItem('posts', JSON.stringify(updated));
-        }
+        await savePostToDatabase(updatedPost.post);
 
         return updatedPost;
       } catch (error) {
         console.error('Add post images error:', error);
         Alert.alert("Error", error instanceof Error ? error.message : "Failed to add images to post");
-        // Refresh data to ensure consistency
-        await refreshData();
         throw error;
       }
     },
-    [token, refreshData]
+    [token]
   );
 
+  // Initialize database and load data
   useEffect(() => {
-    let intervalId: ReturnType<typeof setInterval> | null = null;
-    let isMounted = true;
-
-    const handleConnectivityChange = async (state: import('@react-native-community/netinfo').NetInfoState) => {
-      if (state.isConnected === true && isMounted) {
-        await fetchData();
-        if (!intervalId) {
-          intervalId = setInterval(fetchData, 5 * 60 * 1000); // 5 minutes
+    const initialize = async () => {
+      try {
+        await initPostDatabase();
+        await loadLocalPosts();
+        
+        // Check network connection
+        const netState = await NetInfo.fetch();
+        if (netState.isConnected) {
+          await fetchData();
         }
-      } else {
-        // If disconnected, clear polling interval
-        if (intervalId) {
-          clearInterval(intervalId);
-          intervalId = null;
-        }
+      } catch (err) {
+        console.error('Initialization error:', err);
+        setError(err instanceof Error ? err.message : 'Initialization failed');
+      } finally {
+        setLoading(false);
       }
     };
 
-    // Initial load from cache
-    loadCachedData();
+    initialize();
 
-    // Subscribe to network changes
-    const unsubscribe = NetInfo.addEventListener(handleConnectivityChange);
-
-    // Also check current connection on mount
-    NetInfo.fetch().then(handleConnectivityChange);
+    // Set up network listener
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (state.isConnected) {
+        fetchData().catch(console.error);
+      }
+    });
 
     return () => {
-      isMounted = false;
-      if (intervalId) clearInterval(intervalId);
       unsubscribe();
     };
-  }, [fetchData, loadCachedData]);
+  }, [loadLocalPosts, fetchData]);
+
+  const contextValue: PostContextType = {
+    posts,
+    loading,
+    error,
+    lastUpdated,
+    refreshData,
+    createPost,
+    updatePost,
+    deletePost,
+    deletePostImage,
+    addPostImages,
+    getPostsCount: () => getPostsCount(),
+  };
 
   return (
-    <PostContext.Provider 
-      value={{ 
-        posts,
-        loading,
-        error,
-        lastUpdated,
-        refreshData,
-        createPost,
-        updatePost,
-        deletePost,
-        deletePostImage,
-        addPostImages
-      }}
-    >
+    <PostContext.Provider value={contextValue}>
       {children}
     </PostContext.Provider>
   );
 };
 
-const usePost = () => useContext(PostContext);
+export const usePosts = () => {
+  const context = useContext(PostContext);
+  if (!context) {
+    throw new Error('usePosts must be used within a PostProvider');
+  }
+  return context;
+};
 
-export { PostContext, PostProvider, usePost };
+export default PostProvider;

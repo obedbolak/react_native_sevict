@@ -3,7 +3,7 @@ import { FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { FlatList, ImageBackground, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-const Search = () => {
+export default function Search () {
   const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -571,4 +571,3 @@ const Search = () => {
   );
 };
 
-export default Search;

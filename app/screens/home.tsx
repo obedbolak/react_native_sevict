@@ -13,7 +13,7 @@ const Home = () => {
     contentContainer: {
       flex: 1,
       backgroundColor: colors.background,
-      paddingHorizontal: 5,
+      
       paddingTop: 10,
     },
     headerContainer: {
@@ -266,7 +266,7 @@ const Home = () => {
               <Text style={styles.iconLabel}>Management</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.iconContainer}>
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push('/fields/dataScience')}>
               <View style={styles.iconBackground}>
                 <MaterialIcons name='data-usage' size={32} color={colors.primary} />
               </View>

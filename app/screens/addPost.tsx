@@ -1,5 +1,5 @@
 import { useAuth } from "@/context/authContext";
-import { usePost } from "@/context/postContext";
+import { usePosts } from "@/context/postContext";
 import { useTheme } from "@/context/themeContext";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -30,7 +30,7 @@ const AddPost: React.FC = () => {
     deletePostImage,
     addPostImages,
     refreshData
-  } = usePost();
+  } = usePosts();
   
   const [name, setName] = useState<string>("");
   const [description, setDescription] = useState<string>("");

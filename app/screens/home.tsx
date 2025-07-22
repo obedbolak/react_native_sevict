@@ -7,6 +7,7 @@ import { ImageBackground, ScrollView, StyleSheet, Text, TextInput, TouchableOpac
 const Home = () => {
   const { colors } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [showMoreFields, setShowMoreFields] = useState(false);
 
 
   const styles = StyleSheet.create({
@@ -246,40 +247,157 @@ const Home = () => {
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Popular Fields</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAllText}>View all</Text>
+            <TouchableOpacity onPress={() => setShowMoreFields(!showMoreFields)}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.viewAllText}>View all</Text>
+                {showMoreFields ?
+                  <MaterialIcons name="keyboard-arrow-up" size={20} color={colors.primary} />
+                  :<MaterialIcons name="keyboard-arrow-right" size={20} color={colors.primary} />}
+                
+            </View>
+              
             </TouchableOpacity>
           </View>
           
           <View style={styles.courseIconsContainer}>
-            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push('/fields/compurterEn')}>
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push({
+              pathname: '/fields/[id]',
+              params: { id: 'computer' }
+            })}>
               <View style={styles.iconBackground}>
-                <MaterialIcons name='code' size={32} color={colors.primary} />
+                <MaterialIcons name='computer' size={32} color={colors.primary} />
               </View>
-              <Text style={styles.iconLabel}>Computer En.</Text>
+              <Text style={styles.iconLabel}>Computer Engineering</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push('/fields/managment')}>
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push({
+              pathname: '/fields/[id]',
+              params: { id: 'management' }
+            })}>
               <View style={styles.iconBackground}>
-                <MaterialIcons name='phone-android' size={32} color={colors.primary} />
+                <MaterialIcons name='manage-accounts' size={32} color={colors.primary} />
               </View>
               <Text style={styles.iconLabel}>Management</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push('/fields/dataScience')}>
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push({
+              pathname: '/fields/[id]',
+              params: { id: 'business' }
+            })}>
               <View style={styles.iconBackground}>
-                <MaterialIcons name='data-usage' size={32} color={colors.primary} />
+                <MaterialIcons name='business-center' size={32} color={colors.primary} />
               </View>
-              <Text style={styles.iconLabel}>Data Science</Text>
+              <Text style={styles.iconLabel}>business & finance</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.iconContainer}>
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push({
+              pathname: '/fields/[id]',
+              params: { id: 'biomedical' }
+            })}>
               <View style={styles.iconBackground}>
-                <MaterialIcons name='security' size={32} color={colors.primary} />
+                <MaterialIcons name='health-and-safety' size={32} color={colors.primary} />
               </View>
-              <Text style={styles.iconLabel}>Cyber Security</Text>
+              <Text style={styles.iconLabel}>BioMedical</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Additional Course Icons */}
+          {showMoreFields && (
+            <>
+          <View style={[styles.courseIconsContainer, { marginTop: 15 }]}>
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push({
+              pathname: '/fields/[id]',
+              params: { id: 'electrical' }
+            })}>
+              <View style={styles.iconBackground}>
+                <MaterialIcons name='electrical-services' size={32} color={colors.primary} />
+              </View>
+              <Text style={styles.iconLabel}>Electrical</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push({
+              pathname: '/fields/[id]',
+              params: { id: 'mechanical' }
+            })}>
+              <View style={styles.iconBackground}>
+                {/* mechanics */}
+
+                <MaterialIcons name='engineering' size={32} color={colors.primary} />
+              </View>
+              <Text style={styles.iconLabel}>Mechanical</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push({
+              pathname: '/fields/[id]',
+              params: { id: 'arts' }
+            })}>
+              <View style={styles.iconBackground}>
+                <MaterialIcons name='palette' size={32} color={colors.primary} />
+              </View>
+              <Text style={styles.iconLabel}>Arts and Culture</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push({
+              pathname: '/fields/[id]',
+              params: { id: 'agriculture' }
+            })}>
+              <View style={styles.iconBackground}>
+                <MaterialIcons name='agriculture' size={32} color={colors.primary} />
+              </View>
+              <Text style={styles.iconLabel}>Agriculture & Food Science</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={[styles.courseIconsContainer, { marginTop: 20 }]}>
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push({
+              pathname: '/fields/[id]',
+              params: { id: 'civil' }
+            })}>
+              <View style={styles.iconBackground}>
+                {/* civil engineering */}
+                <MaterialIcons name='work' size={32} color={colors.primary} />
+              </View>
+              <Text style={styles.iconLabel}>Civil Engineering</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push({
+              pathname: '/fields/[id]',
+              params: { id: 'communication' }
+            })}>
+              <View style={styles.iconBackground}>
+                {/* mechanics */}
+
+                <MaterialIcons name='ring-volume' size={32} color={colors.primary} />
+              </View>
+              <Text style={styles.iconLabel}>Communication</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push({
+              pathname: '/fields/[id]',
+              params: { id: 'education' }
+            })}>
+              <View style={styles.iconBackground}>
+                <MaterialIcons name='menu-book' size={32} color={colors.primary} />
+              </View>
+              <Text style={styles.iconLabel}>Science of Education</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.iconContainer} onPress={() => router.push({
+              pathname: '/fields/[id]',
+              params: { id: 'tourism' }
+            })}>
+              <View style={styles.iconBackground}>
+                <MaterialIcons name='location-city' size={32} color={colors.primary} />
+              </View>
+              <Text style={styles.iconLabel}>Tourism and Hotel Management</Text>
+            </TouchableOpacity>
+          </View>
+          </>
+            
+          )
+            
+          }
+          
+          
         </View>
 
         {/* Upcoming Workshops Section */}

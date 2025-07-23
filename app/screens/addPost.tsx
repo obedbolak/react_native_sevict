@@ -17,32 +17,49 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type PostImage = {
+  public_id: string;
+  url: string;
+  _id: string;
+};
+
+type Post = {
+  _id: string;
+  title: string;
+  description: string;
+  images: PostImage[];
+  postedBy?: { _id: string; name?: string };
+  likes: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+};
+
 const AddPost: React.FC = () => {
   const { authToken, user } = useAuth();
   const { colors } = useTheme();
   const { 
     posts, 
-    loading, 
-    error,
     createPost, 
     updatePost, 
     deletePost,
     deletePostImage,
-    addPostImages,
     refreshData
   } = usePosts();
   
-  const [name, setName] = useState<string>("");
+  const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [images, setImages] = useState<string[]>([]);
+  const [tempImages, setTempImages] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<PostImage[]>([]);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const pickImages = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (permissionResult.granted === false) {
-      alert("Permission to access camera roll is required!");
+      Alert.alert("Permission required", "Please allow access to your photos to select images");
       return;
     }
 
@@ -52,59 +69,69 @@ const AddPost: React.FC = () => {
       aspect: [4, 4],
       quality: 1,
       allowsMultipleSelection: true,
-      selectionLimit: 5,
+      selectionLimit: 5 - existingImages.length - tempImages.length,
     });
 
     if (!result.canceled && result.assets) {
       const newImages = result.assets.map(asset => asset.uri);
-      
-      if (editingPostId) {
-        // For editing, immediately upload new images
-        try {
-          await addPostImages(editingPostId, newImages);
-          setImages(prev => [...prev, ...newImages].slice(0, 5));
-        } catch (error) {
-          Alert.alert("Error", "Failed to add images");
-        }
-      } else {
-        // For new post, just add to local state
-        setImages(prev => [...prev, ...newImages].slice(0, 5));
-      }
+      setTempImages(prev => [...prev, ...newImages]);
     }
   };
 
   const handleSubmit = async () => {
-    if (images.length === 0) {
-      Alert.alert("Error", "Please select at least one image.");
+    if (tempImages.length === 0 && existingImages.length === 0) {
+      Alert.alert("Error", "Please select at least one image");
       return;
     }
 
+    if (!title.trim()) {
+      Alert.alert("Error", "Please enter a title");
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
       if (editingPostId) {
-        await updatePost(editingPostId, { title: name, description }, images);
+        await updatePost(
+          editingPostId, 
+          { title, description },
+          tempImages
+        );
       } else {
-        await createPost({ title: name, description }, images);
+        await createPost({ title, description }, tempImages);
       }
       
-      // Reset form
-      setName("");
-      setDescription("");
-      setImages([]);
-      setEditingPostId(null);
-      setShowForm(false);
+      handleCancelForm();
+      Alert.alert("Success", editingPostId ? "Post updated successfully" : "Post created successfully");
     } catch (error) {
       console.error("Submit error:", error);
+      Alert.alert("Error", "Failed to save post. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (postId: string) => {
-    try {
-      await deletePost(postId);
-      Alert.alert("Success", "Post deleted successfully");
-    } catch (error) {
-      console.error("Delete error:", error);
-      Alert.alert("Error", "Failed to delete post");
-    }
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this post?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deletePost(postId);
+              refreshData();
+            } catch (error) {
+              console.error("Delete error:", error);
+              Alert.alert("Error", "Failed to delete post");
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleDeleteImage = async (imageId: string) => {
@@ -112,55 +139,52 @@ const AddPost: React.FC = () => {
     
     try {
       await deletePostImage(editingPostId, imageId);
-      setImages(prev => prev.filter(uri => !uri.includes(imageId)));
+      setExistingImages(prev => prev.filter(img => img.public_id !== imageId));
+      refreshData();
     } catch (error) {
       console.error("Delete image error:", error);
       Alert.alert("Error", "Failed to delete image");
     }
   };
 
-  type Post = {
-    _id: string;
-    title: string;
-    description: string;
-    images: { url: string; public_id: string }[];
-    postedBy?: { _id: string; name?: string };
-    likes: number;
+  const handleEdit = (post: Post) => {
+    setEditingPostId(post._id);
+    setTitle(post.title);
+    setDescription(post.description);
+    setExistingImages(post.images);
+    setTempImages([]);
+    setShowForm(true);
   };
-  
-    const handleEdit = (post: Post) => {
-      setEditingPostId(post._id);
-      setName(post.title);
-      setDescription(post.description);
-      setImages(post.images.map(img => img.url));
-      setShowForm(true);
-    };
 
   const handleCancelForm = () => {
-    setName("");
+    setTitle("");
     setDescription("");
-    setImages([]);
+    setTempImages([]);
+    setExistingImages([]);
     setEditingPostId(null);
     setShowForm(false);
   };
 
   const renderImages = () => (
     <View style={styles.imageGridContainer}>
-      {images.map((uri, index) => (
-        <View key={index} style={styles.imageContainer}>
+      {existingImages.map((image) => (
+        <View key={image.public_id} style={styles.imageContainer}>
+          <Image source={{ uri: image.url }} style={styles.image} />
+          <TouchableOpacity
+            onPress={() => handleDeleteImage(image.public_id)}
+            style={styles.imageDeleteButton}
+          >
+            <MaterialIcons name="delete" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
+      ))}
+      
+      {tempImages.map((uri, index) => (
+        <View key={`temp-${index}`} style={styles.imageContainer}>
           <Image source={{ uri }} style={styles.image} />
           <TouchableOpacity
             onPress={() => {
-              // Find the corresponding image object to get public_id
-              const post = posts.find(p => p._id === editingPostId);
-              const imgObj = post?.images.find(img => img.url === uri);
-              
-              if (imgObj) {
-                handleDeleteImage(imgObj.public_id);
-              } else {
-                // For newly added images not yet uploaded
-                setImages(prev => prev.filter((_, i) => i !== index));
-              }
+              setTempImages(prev => prev.filter((_, i) => i !== index));
             }}
             style={styles.imageDeleteButton}
           >
@@ -168,47 +192,82 @@ const AddPost: React.FC = () => {
           </TouchableOpacity>
         </View>
       ))}
-      {images.length < 5 && (
+      
+      {(existingImages.length + tempImages.length) < 5 && (
         <TouchableOpacity
           onPress={pickImages}
           style={[styles.imageContainer, styles.addImageButton]}
+          disabled={isSubmitting}
         >
-          <MaterialIcons name="add-photo-alternate" size={32} color="#007bff" />
-          <Text style={styles.addImageText}>Add Image</Text>
+          <MaterialIcons 
+            name="add-photo-alternate" 
+            size={32} 
+            color={colors.primary} 
+          />
+          <Text style={[styles.addImageText, { color: colors.primary }]}>
+            Add Image
+          </Text>
         </TouchableOpacity>
       )}
     </View>
   );
 
   const renderForm = () => (
-    <View style={styles.formContainer}>
-      <Text style={styles.formTitle}>
-        {editingPostId ? "Edit Post" : "Add New Post"}
+    <View style={[styles.formContainer, { backgroundColor: colors.card }]}>
+      <Text style={[styles.formTitle, { color: colors.text }]}>
+        {editingPostId ? "Edit Post" : "Create New Post"}
       </Text>
+      
       <TextInput
         placeholder="Post Title"
-        value={name}
-        onChangeText={setName}
-        style={styles.input}
         placeholderTextColor={colors.placeholder}
+        value={title}
+        onChangeText={setTitle}
+        style={[styles.input, { 
+          borderColor: colors.border,
+          backgroundColor: colors.inputBackground,
+          color: colors.text
+        }]}
+        editable={!isSubmitting}
       />
+      
       <TextInput
         placeholder="Post Description"
+        placeholderTextColor={colors.placeholder}
         value={description}
         onChangeText={setDescription}
-        style={styles.input}
+        style={[styles.input, { 
+          borderColor: colors.border,
+          backgroundColor: colors.inputBackground,
+          color: colors.text,
+          minHeight: 100,
+          textAlignVertical: 'top'
+        }]}
         multiline
-        placeholderTextColor={colors.placeholder}
+        editable={!isSubmitting}
       />
      
       {renderImages()}
+      
       <View style={styles.formButtonContainer}>
-        <TouchableOpacity style={styles.cancelButton} onPress={handleCancelForm}>
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+        <TouchableOpacity 
+          style={[styles.cancelButton, { backgroundColor: colors.link }]}
+          onPress={handleCancelForm}
+          disabled={isSubmitting}
+        >
+          <Text style={styles.buttonText}>Cancel</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>
-            {editingPostId ? "Update Post" : "Post Now"}
+        
+        <TouchableOpacity 
+          style={[styles.submitButton, { 
+            backgroundColor: isSubmitting ? colors.mutedForeground : colors.primary,
+            opacity: isSubmitting ? 0.7 : 1
+          }]}
+          onPress={handleSubmit}
+          disabled={isSubmitting}
+        >
+          <Text style={styles.buttonText}>
+            {isSubmitting ? "Processing..." : (editingPostId ? "Update" : "Post")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -217,20 +276,21 @@ const AddPost: React.FC = () => {
 
   const renderPosts = () => (
     <View style={styles.postsContainer}>
-      {posts.map((post) => (
-        <View key={post._id} style={styles.cardContainer}>
+      {posts.map((post ) => (
+        <View key={post._id} style={[styles.cardContainer, { backgroundColor: colors.card }]}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>{post.title}</Text>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>{post.title}</Text>
+            
             {user?._id === post.postedBy?._id && (
               <View style={styles.cardActions}>
                 <TouchableOpacity 
-                  onPress={() => handleEdit(post)}
+                  onPress={() =>{}}
                   style={styles.actionButton}
                 >
                   <MaterialCommunityIcons 
                     name="pencil" 
                     size={16} 
-                    color={colors.mutedForeground} 
+                    color={colors.primary} 
                   />
                 </TouchableOpacity>
                 <TouchableOpacity 
@@ -247,7 +307,9 @@ const AddPost: React.FC = () => {
             )}
           </View>
           
-          <Text style={styles.cardDescription}>{post.description}</Text>
+          <Text style={[styles.cardDescription, { color: colors.mutedForeground }]}>
+            {post.description}
+          </Text>
           
           {post.images.length > 0 && (
             <ScrollView 
@@ -266,17 +328,18 @@ const AddPost: React.FC = () => {
           )}
           
           <View style={styles.cardFooter}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
               <TouchableOpacity style={styles.likeButton}>
                 <MaterialCommunityIcons 
-                  name={post.likes > 0 ? "heart" : "heart-outline"} 
+                  name={ "heart-outline"} 
                   size={16} 
-                  color={post.likes > 0 ? colors.destructive : colors.mutedForeground} 
+                  color={colors.mutedForeground} 
                 />
-                <Text style={styles.likeCount}>
-                  {post.likes > 0 ? post.likes : ''}
+                <Text style={[styles.likeCount, { color: colors.mutedForeground }]}>
+                  0
                 </Text>
               </TouchableOpacity>
+              
               <TouchableOpacity style={styles.likeButton}>
                 <MaterialCommunityIcons 
                   name="message-outline" 
@@ -286,7 +349,7 @@ const AddPost: React.FC = () => {
               </TouchableOpacity>
             </View>
             
-            <Text style={styles.postedBy}>
+            <Text style={[styles.postedBy, { color: colors.mutedForeground }]}>
               Posted by: {post.postedBy?.name || 'Unknown'}
             </Text>
           </View>
@@ -295,25 +358,151 @@ const AddPost: React.FC = () => {
     </View>
   );
 
-   const styles = StyleSheet.create({
-    postsContainer: {
-    gap: 16,
-    paddingBottom: 16,
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.postsHeader}>
+        <Text style={[styles.postsTitle, { color: colors.text }]}>Posts</Text>
+        
+        {!showForm && (
+          <TouchableOpacity
+            style={[styles.createPostButton, { backgroundColor: colors.primary }]}
+            onPress={() => setShowForm(true)}
+          >
+            <MaterialIcons name="add" size={20} color="white" />
+            <Text style={styles.createPostButtonText}>Create Post</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContainer}
+      >
+        {showForm ? renderForm() : renderPosts()}
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
   },
-  cardContainer: {
-    backgroundColor: colors.card,
+  scrollContainer: {
+    paddingBottom: 32,
+  },
+  postsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  postsTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  createPostButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  createPostButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    marginLeft: 4,
+  },
+  formContainer: {
     borderRadius: 12,
     padding: 16,
+    marginBottom: 16,
+  },
+  formTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  input: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    fontSize: 16,
+  },
+  imageGridContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 20,
+  },
+  imageContainer: {
+    width: (Dimensions.get("window").width - 64) / 3,
+    height: (Dimensions.get("window").width - 64) / 3,
+    position: "relative",
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+  imageDeleteButton: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    backgroundColor: 'rgba(255,0,0,0.7)',
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addImageButton: {
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addImageText: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+  formButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 16,
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  submitButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  postsContainer: {
+    gap: 16,
+  },
+  cardContainer: {
+    borderRadius: 12,
+    padding: 16,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -324,12 +513,10 @@ const AddPost: React.FC = () => {
   cardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.foreground,
     flex: 1,
   },
   cardDescription: {
     fontSize: 14,
-    color: colors.mutedForeground,
     marginBottom: 16,
     lineHeight: 20,
   },
@@ -350,7 +537,7 @@ const AddPost: React.FC = () => {
   },
   cardActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 12,
   },
   actionButton: {
     padding: 4,
@@ -359,289 +546,13 @@ const AddPost: React.FC = () => {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    padding: 4,
   },
   likeCount: {
     fontSize: 14,
-    color: colors.mutedForeground,
   },
   postedBy: {
     fontSize: 12,
-    color: colors.mutedForeground,
-  },
-  container: {
-    flex: 1,
-    padding: 1,
-    backgroundColor: colors.background,
-  },
-  postImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-    color: colors.text,
-  },
-  productList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  productItem: {
-    width: "33%",
-    padding: 8,
-  },
-  productCard: {
-    backgroundColor: colors.cardBackground,
-    borderRadius: 8,
-    padding: 8,
-    borderColor: colors.border,
-    borderWidth: 1,
-  },
-  productImage: {
-    width: "100%",
-    height: 80,
-    borderRadius: 8,
-  },
-  productTitle: {
-    fontSize: 12,
-    fontWeight: "bold",
-    marginTop: 8,
-    color: colors.text,
-  },
-  productDescription: {
-    fontSize: 12,
-    color: colors.subtext,
-    marginTop: 4,
-  },
-  formContainer: {
-    marginTop: 16,
-  },
-  formTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 16,
-    alignSelf: "center",
-    color: colors.text,
-  },
-  postsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  postsTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  createPostButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  createPostButtonText: {
-    color: colors.buttonText,
-    fontWeight: "bold",
-    marginLeft: 4,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 16,
-    backgroundColor: colors.inputBackground,
-    color: colors.text,
-  
-  },
-  categoryLabel: {
-    marginBottom: 8,
-    fontSize: 16,
-    color: colors.text,
-  },
-  picker: {
-    marginBottom: 16,
-    color: colors.text,
-  },
-  imageGridContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 20,
-  },
-  imageContainer: {
-    width: (Dimensions.get("window").width - 52) / 4,
-    height: (Dimensions.get("window").width - 52) / 4,
-    position: "relative",
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 8,
-  },
-  imageDeleteButton: {
-    position: "absolute",
-    top: 5,
-    right: 5,
-    backgroundColor: colors.error,
-    borderRadius: 15,
-    width: 30,
-    height: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1,
-  },
-  addImageButton: {
-    borderWidth: 2,
-    borderColor: colors.primary,
-    borderStyle: "dashed",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.inputBackground,
-  },
-  addImageText: {
-    color: colors.primary,
-    fontSize: 12,
-    marginTop: 4,
-    textAlign: "center",
-  },
-  label: {
-    fontSize: 18,
-    marginBottom: 10,
-    color: colors.text,
-  },
-  selectButton: {
-    padding: 10,
-    backgroundColor: colors.primary,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: colors.buttonText,
-    fontSize: 16,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    width: "80%",
-    backgroundColor: colors.background,
-    padding: 20,
-    borderRadius: 10,
-  },
-  modalTitle: {
-    fontSize: 20,
-    marginBottom: 15,
-    textAlign: "center",
-    color: colors.text,
-  },
-  item: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  itemText: {
-    fontSize: 16,
-    color: colors.text,
-  },
-  formButtonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-  },
-  cancelButton: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: colors.subtext,
-    borderRadius: 5,
-    alignItems: "center",
-    marginRight: 8,
-  },
-  cancelButtonText: {
-    color: colors.buttonText,
-    fontWeight: "bold",
-  },
-  submitButton: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: colors.error,
-    borderRadius: 5,
-    alignItems: "center",
-    marginLeft: 8,
-  },
-  submitButtonText: {
-    color: colors.buttonText,
-    fontWeight: "bold",
-  },
-  closeButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: colors.error,
-    borderRadius: 5,
-    alignItems: "center",
-    width: "50%",
-  },
-  postCard: {
-    backgroundColor: colors.cardBackground,
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    borderColor: colors.border,
-    borderWidth: 1,
-  },
-  postActions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 8,
-  },
-  editButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 5,
-    padding: 10,
-    
-    marginRight: 8,
-  },
-  deleteButton: {
-    backgroundColor: colors.error,
-    borderRadius: 5,
-    padding: 10,
-    
   },
 });
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.postsHeader}>
-        <Text style={styles.postsTitle}>Posts</Text>
-        <TouchableOpacity
-          style={styles.createPostButton}
-          onPress={() => setShowForm(true)}
-        >
-          <MaterialIcons name="add" size={20} color="white" />
-          <Text style={styles.createPostButtonText}>Create Post</Text>
-        </TouchableOpacity>
-      </View>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {showForm ? renderForm() : renderPosts()}
-      </ScrollView>
-    </SafeAreaView>
-  );
-};
 
 export default AddPost;

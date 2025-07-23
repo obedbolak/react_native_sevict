@@ -63,12 +63,9 @@ function ThemedApp() {
 
 export default function RootLayout() {
   return (
-    <CustomThemeProvider>
-      
+    <CustomThemeProvider> 
       <AuthProvider>
-       
-        <ThemedApp />
-        
+        <ThemedApp /> 
       </AuthProvider>
     </CustomThemeProvider>
   );

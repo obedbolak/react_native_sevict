@@ -3,14 +3,15 @@ import * as SecureStore from 'expo-secure-store';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import {
-  deletePostFromDatabase,
-  getPostsCount,
-  getPostsFromDatabase,
-  initPostDatabase,
-  savePostToDatabase,
-  savePostsToDatabase,
-  updatePostInDatabase
-} from '../db/postbase'; // Import your post database functions
+  deleteAllPosts,
+  deletePost as deletePostFromDB,
+  getAllPosts,
+  getPostImageBlob,
+  getPostsCount as getPostsCountFromDB,
+  initPostsDatabase,
+  savePost,
+  savePosts
+} from '../db/postbase'; // Updated import path to match your database module
 
 interface PostImage {
   public_id: string;
@@ -28,11 +29,17 @@ interface Post {
   title: string;
   description: string;
   images: PostImage[];
-  likes: number;
+  likes?: number; // Made optional since it's not in your original data
   postedBy: User;
   createdAt: string;
   updatedAt: string;
   __v: number;
+}
+
+interface PostsResponse {
+  success: boolean;
+  message: string;
+  posts: Post[];
 }
 
 interface PostContextType {
@@ -47,6 +54,8 @@ interface PostContextType {
   deletePostImage: (postId: string, imageId: string) => Promise<void>;
   addPostImages: (postId: string, images: string[]) => Promise<void>;
   getPostsCount: () => Promise<number>;
+  getImageBlob: (postId: string, imageId: string) => Promise<Uint8Array | null>;
+  clearAllPosts: () => Promise<void>;
 }
 
 const PostContext = createContext<PostContextType>({
@@ -61,6 +70,8 @@ const PostContext = createContext<PostContextType>({
   deletePostImage: async () => {},
   addPostImages: async () => {},
   getPostsCount: async () => 0,
+  getImageBlob: async () => null,
+  clearAllPosts: async () => {},
 });
 
 const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -72,37 +83,38 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   // Helper function to validate and normalize data
   const validateAndNormalizeData = (data: any): Post[] => {
-  try {
-    // Handle case where data contains a 'posts' array
-    if (data && typeof data === 'object' && Array.isArray(data.posts)) {
-      return data.posts.filter((post: any) => 
-        post && 
-        typeof post === 'object' && 
-        post._id && 
-        typeof post._id === 'string'
-      );
-    }
-    
-    // Handle case where data is directly an array
-    if (Array.isArray(data)) {
-      return data.filter((post: any) => 
-        post && 
-        typeof post === 'object' && 
-        post._id && 
-        typeof post._id === 'string'
-      );
-    }
+    try {
+      // Handle case where data contains a 'posts' array
+      if (data && typeof data === 'object' && Array.isArray(data.posts)) {
+        return data.posts.filter((post: any) => 
+          post && 
+          typeof post === 'object' && 
+          post._id && 
+          typeof post._id === 'string'
+        );
+      }
+      
+      // Handle case where data is directly an array
+      if (Array.isArray(data)) {
+        return data.filter((post: any) => 
+          post && 
+          typeof post === 'object' && 
+          post._id && 
+          typeof post._id === 'string'
+        );
+      }
 
-    return [];
-  } catch (error) {
-    console.error('Data validation error:', error);
-    return [];
-  }
-};
+      return [];
+    } catch (error) {
+      console.error('Data validation error:', error);
+      return [];
+    }
+  };
+
   // Load posts from local database
   const loadLocalPosts = useCallback(async () => {
     try {
-      const localPosts = await getPostsFromDatabase();
+      const localPosts = await getAllPosts();
       setPosts(localPosts);
       console.log(`Loaded ${localPosts.length} posts from local database`);
       
@@ -126,11 +138,11 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         throw new Error('Failed to fetch posts');
       }
 
-      const data = await response.json();
+      const data: PostsResponse = await response.json();
       const validatedPosts = validateAndNormalizeData(data);
 
-      // Save to local database
-      await savePostsToDatabase(validatedPosts);
+      // Save to local database using the new savePosts function
+      await savePosts(data);
       
       // Update state
       setPosts(validatedPosts);
@@ -150,7 +162,7 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   }, [loadLocalPosts]);
 
   const createPost = useCallback(
-    async (post: { title: string; description: string }, images: string[]) => {
+    async (postData: { title: string; description: string }, images: string[]) => {
       const tempId = `temp-${Date.now()}`;
       try {
         // Get token if not already set
@@ -166,11 +178,11 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         // Create a temporary post object for optimistic update
         const tempPost: Post = {
           _id: tempId,
-          ...post,
-          images: images.map(uri => ({
+          ...postData,
+          images: images.map((uri, index) => ({
             url: uri,
             public_id: "",
-            _id: `temp-img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            _id: `temp-img-${Date.now()}-${index}`
           })),
           likes: 0,
           postedBy: {
@@ -184,12 +196,12 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
         // Optimistically update the local state and database
         setPosts(prev => [tempPost, ...prev]);
-        await savePostToDatabase(tempPost);
+        await savePost(tempPost);
 
         // Prepare FormData
         const formData = new FormData();
-        formData.append("title", post.title);
-        formData.append("description", post.description);
+        formData.append("title", postData.title);
+        formData.append("description", postData.description);
         
         images.forEach((uri, index) => {
           const filename = uri.split('/').pop() || `image_${index}.jpg`;
@@ -223,14 +235,14 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         setPosts(prev => prev.map(p => p._id === tempId ? createdPost : p));
         
         // Update database with real post and remove temp post
-        await deletePostFromDatabase(tempId);
-        await savePostToDatabase(createdPost);
+        await deletePostFromDB(tempId);
+        await savePost(createdPost);
 
         return createdPost;
       } catch (error) {
         // Revert optimistic update on error
         setPosts(prev => prev.filter(p => p._id !== tempId));
-        await deletePostFromDatabase(tempId);
+        await deletePostFromDB(tempId);
         
         console.error('Create post error:', error);
         Alert.alert("Error", error instanceof Error ? error.message : "Failed to create post");
@@ -266,12 +278,22 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           }
         }
 
-        // Optimistically update local state and database
-        const updatedData = { ...updates, updatedAt: new Date().toISOString() };
+        // Get current post for optimistic update
+        const currentPost = posts.find(p => p._id === postId);
+        if (!currentPost) {
+          throw new Error("Post not found");
+        }
+
+        // Optimistically update local state
+        const updatedPost = {
+          ...currentPost,
+          ...updates,
+          updatedAt: new Date().toISOString()
+        };
+        
         setPosts(prev => prev.map(post => 
-          post._id === postId ? { ...post, ...updatedData } : post
+          post._id === postId ? updatedPost : post
         ));
-        await updatePostInDatabase(postId, updatedData);
 
         // Send update to server
         let response;
@@ -315,16 +337,16 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           throw new Error('Failed to update post');
         }
 
-        const updatedPost = await response.json();
-        const serverPost = updatedPost.post;
+        const responseData = await response.json();
+        const serverPost = responseData.post;
         
         // Update state and database with server response
         setPosts(prev => prev.map(post => 
           post._id === postId ? serverPost : post
         ));
-        await savePostToDatabase(serverPost);
+        await savePost(serverPost);
 
-        return updatedPost;
+        return responseData;
       } catch (error) {
         console.error('Update post error:', error);
         Alert.alert("Error", error instanceof Error ? error.message : "Failed to update post");
@@ -333,14 +355,14 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         throw error;
       }
     },
-    [token, refreshData]
+    [token, posts, refreshData]
   );
 
   const deletePost = useCallback(
     async (postId: string) => {
       try {
         if (!token) {
-          const storedToken = await SecureStore.getItemAsync("token");
+          const storedToken = await SecureStore.getItemAsync("authToken");
           if (storedToken) {
             setToken(storedToken);
           } else {
@@ -350,7 +372,7 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
         // Optimistically remove from local state and database
         setPosts(prev => prev.filter(post => post._id !== postId));
-        await deletePostFromDatabase(postId);
+        await deletePostFromDB(postId);
 
         const response = await fetch(`http://10.0.2.2:5000/api/v1/post/delete-post/${postId}`, {
           method: 'DELETE',
@@ -379,7 +401,7 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     async (postId: string, imageId: string) => {
       try {
         if (!token) {
-          const storedToken = await SecureStore.getItemAsync("token");
+          const storedToken = await SecureStore.getItemAsync("authToken");
           if (storedToken) {
             setToken(storedToken);
           } else {
@@ -387,7 +409,7 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           }
         }
 
-        // Optimistically update local state and database
+        // Optimistically update local state
         const updatedPosts = posts.map(post => {
           if (post._id === postId) {
             return {
@@ -400,10 +422,6 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         });
         
         setPosts(updatedPosts);
-        await updatePostInDatabase(postId, {
-          images: updatedPosts.find(p => p._id === postId)?.images || [],
-          updatedAt: new Date().toISOString()
-        });
 
         const response = await fetch(`http://10.0.2.2:5000/api/v1/post/delete-post-image/${postId}`, {
           method: 'DELETE',
@@ -418,15 +436,16 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           throw new Error('Failed to delete post image');
         }
 
-        const updatedPost = await response.json();
+        const updatedPostResponse = await response.json();
+        const serverPost = updatedPostResponse.post;
         
         // Update state and database with server response
         setPosts(prev => prev.map(post => 
-          post._id === postId ? updatedPost.post : post
+          post._id === postId ? serverPost : post
         ));
-        await savePostToDatabase(updatedPost.post);
+        await savePost(serverPost);
 
-        return updatedPost;
+        return updatedPostResponse;
       } catch (error) {
         console.error('Delete post image error:', error);
         Alert.alert("Error", error instanceof Error ? error.message : "Failed to delete post image");
@@ -442,7 +461,7 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     async (postId: string, images: string[]) => {
       try {
         if (!token) {
-          const storedToken = await SecureStore.getItemAsync("token");
+          const storedToken = await SecureStore.getItemAsync("authToken");
           if (storedToken) {
             setToken(storedToken);
           } else {
@@ -475,15 +494,16 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           throw new Error('Failed to add images to post');
         }
 
-        const updatedPost = await response.json();
+        const updatedPostResponse = await response.json();
+        const serverPost = updatedPostResponse.post;
         
         // Update state and database
         setPosts(prev => prev.map(post => 
-          post._id === postId ? updatedPost.post : post
+          post._id === postId ? serverPost : post
         ));
-        await savePostToDatabase(updatedPost.post);
+        await savePost(serverPost);
 
-        return updatedPost;
+        return updatedPostResponse;
       } catch (error) {
         console.error('Add post images error:', error);
         Alert.alert("Error", error instanceof Error ? error.message : "Failed to add images to post");
@@ -493,11 +513,34 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     [token]
   );
 
+  // Get image blob for offline display
+  const getImageBlob = useCallback(async (postId: string, imageId: string) => {
+    try {
+      return await getPostImageBlob(postId, imageId);
+    } catch (error) {
+      console.error('Error getting image blob:', error);
+      return null;
+    }
+  }, []);
+
+  // Clear all posts from database
+  const clearAllPosts = useCallback(async () => {
+    try {
+      await deleteAllPosts();
+      setPosts([]);
+      setLastUpdated(null);
+      console.log('All posts cleared from database');
+    } catch (error) {
+      console.error('Error clearing posts:', error);
+      Alert.alert("Error", "Failed to clear posts");
+    }
+  }, []);
+
   // Initialize database and load data
   useEffect(() => {
     const initialize = async () => {
       try {
-        await initPostDatabase();
+        await initPostsDatabase();
         await loadLocalPosts();
         
         // Check network connection
@@ -538,7 +581,9 @@ const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     deletePost,
     deletePostImage,
     addPostImages,
-    getPostsCount: () => getPostsCount(),
+    getPostsCount: () => getPostsCountFromDB(),
+    getImageBlob,
+    clearAllPosts,
   };
 
   return (

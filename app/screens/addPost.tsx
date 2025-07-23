@@ -17,40 +17,56 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type PostImage = {
+interface PostImage {
+  _id: string;
   public_id: string;
   url: string;
-  _id: string;
-};
+}
 
-type Post = {
+interface PostedBy {
+  _id: string;
+  name: string;
+}
+
+// Server response interface (what actually comes from server)
+interface ServerPost {
   _id: string;
   title: string;
   description: string;
-  images: PostImage[];
-  postedBy?: { _id: string; name?: string };
-  likes: number;
+  postedBy: string; // Server sends this as string ID
+  images: any[]; // Server sends images array
   createdAt: string;
   updatedAt: string;
   __v: number;
-};
+}
+
+
+interface Post {
+  _id: string;
+  title: string;
+  description: string;
+  postedBy: PostedBy;
+  images: PostImage[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
 
 const AddPost: React.FC = () => {
   const { authToken, user } = useAuth();
   const { colors } = useTheme();
   const { 
-    posts, 
-    createPost, 
-    updatePost, 
-    deletePost,
-    deletePostImage,
-    refreshData
+    posts,
+    addPost,
+    updatePost,
+    removePost,
+    loading: postsLoading,
+    loadPosts
   } = usePosts();
   
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [tempImages, setTempImages] = useState<string[]>([]);
-  const [existingImages, setExistingImages] = useState<PostImage[]>([]);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -69,7 +85,7 @@ const AddPost: React.FC = () => {
       aspect: [4, 4],
       quality: 1,
       allowsMultipleSelection: true,
-      selectionLimit: 5 - existingImages.length - tempImages.length,
+      selectionLimit: 5 - tempImages.length,
     });
 
     if (!result.canceled && result.assets) {
@@ -78,81 +94,219 @@ const AddPost: React.FC = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (tempImages.length === 0 && existingImages.length === 0) {
-      Alert.alert("Error", "Please select at least one image");
-      return;
-    }
 
-    if (!title.trim()) {
-      Alert.alert("Error", "Please enter a title");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      if (editingPostId) {
-        await updatePost(
-          editingPostId, 
-          { title, description },
-          tempImages
-        );
-      } else {
-        await createPost({ title, description }, tempImages);
-      }
-      
-      handleCancelForm();
-      Alert.alert("Success", editingPostId ? "Post updated successfully" : "Post created successfully");
-    } catch (error) {
-      console.error("Submit error:", error);
-      Alert.alert("Error", "Failed to save post. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  // Helper function to transform server post to UI post
+const transformServerPost = (serverPost: ServerPost, currentUser: any): Post => {
+  return {
+    _id: serverPost._id,
+    title: serverPost.title,
+    description: serverPost.description,
+    postedBy: {
+      _id: serverPost.postedBy, // Use the string ID from server
+      name: currentUser?.name || 'Unknown User' // Use current user's name or fetch from server
+    },
+    images: Array.isArray(serverPost.images) ? serverPost.images.map((img: any, index: number) => ({
+      _id: img._id || img.id || `img-${index}-${Math.random().toString(36).substr(2, 9)}`,
+      public_id: img.public_id || img.publicId || `pub-${index}-${Math.random().toString(36).substr(2, 9)}`,
+      url: img.url || img.secure_url || ''
+    })) : [],
+    createdAt: serverPost.createdAt,
+    updatedAt: serverPost.updatedAt,
+    __v: serverPost.__v || 0
   };
+};
 
+// Updated handleSubmit function
+const handleSubmit = async () => {
+  if (tempImages.length === 0) {
+    Alert.alert("Error", "Please select at least one image");
+    return;
+  }
+
+  if (!title.trim()) {
+    Alert.alert("Error", "Please enter a title");
+    return;
+  }
+
+  setIsSubmitting(true);
+  
+  try {
+    if (editingPostId) {
+     
+
+      const response = await fetch(`http://10.0.2.2:5000/api/v1/post/update-post/${editingPostId}`, {
+        method: 'PUT', // or PATCH depending on your API
+        
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ title, description }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update post');
+      }
+
+      const data = await response.json();
+      console.log("Updated post data:", data);
+      await updatePost(transformServerPost(data.updatedPost, user));
+      
+      
+    } else {  
+    
+
+      // Handle creating new post
+      const formData = new FormData();
+      formData.append('title', title.trim());
+      formData.append('description', description.trim());
+
+      tempImages.forEach((uri, index) => {
+        const filename = uri.split('/').pop() || `image-${index}.jpg`;
+        const type = filename.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+
+        formData.append('files', {
+          uri,
+          name: filename,
+          type
+        } as any);
+      });
+     
+      // Send to server
+      const response = await fetch('http://10.0.2.2:5000/api/v1/post/create-post', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${authToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create post');
+      }
+
+      const data = await response.json();
+      console.log("Created post data:", data);
+
+      if (!data.success || !data.post) {
+        throw new Error('Invalid response from server');
+      }
+
+      // Transform server response to match UI expectations
+      const transformedPost = transformServerPost(data.post, user);
+      console.log("Transformed post:", transformedPost);
+
+      // Add to local state
+      await addPost(transformedPost);
+      
+      Alert.alert("Success", "Post created successfully");
+    }
+    
+    // Clear form
+    handleCancelForm();
+    
+  } catch (error) {
+    console.error("Submit error:", error);
+    
+    let errorMessage = "Failed to save post. Please try again.";
+    if (error instanceof Error) {
+      if (error.message.includes('network') || error.message.includes('fetch')) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      } else if (error.message.includes('server')) {
+        errorMessage = "Server error. Please try again later.";
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
+    Alert.alert("Error", errorMessage);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+const handleDeleteImage = async(imageId: string) => {
+  console.log('Deleting image with ID:', imageId);
+  // send a request to the server to delete the image
+  try {
+   const response = await fetch(`http://10.0.2.2:5000/api/v1/post/delete-post-image/${editingPostId}/${imageId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+    }else{
+      const data = await response.json();
+      console.log(`Deleted image with ID: ${imageId}`, data);
+      
+    }
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    Alert.alert('Error', 'Failed to delete image. Please try again.');
+  } finally {
+    // update the local state to remove the image
+    setTempImages(prevImages => {
+      return prevImages.filter(image => image !== imageId);
+    })
+
+    
+  }
+  // then update the local state to remove the image
+  
+}
   const handleDelete = async (postId: string) => {
-    Alert.alert(
-      "Confirm Delete",
-      "Are you sure you want to delete this post?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Delete", 
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deletePost(postId);
-              refreshData();
-            } catch (error) {
-              console.error("Delete error:", error);
-              Alert.alert("Error", "Failed to delete post");
+  Alert.alert(
+    "Confirm Delete",
+    "Are you sure you want to delete this post?",
+    [
+      { text: "Cancel", style: "cancel" },
+      { 
+        text: "Delete", 
+        style: "destructive",
+        onPress: async () => {
+          try {
+            // First make the API call to delete from server
+            const response = await fetch(`http://10.0.2.2:5000/api/v1/post/delete-post/${postId}`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`,
+              },
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || 'Failed to delete post');
             }
+
+            // Only if server deletion succeeds, update local state
+            await removePost(postId);
+            
+            // Optional: Refresh the posts list from server if needed
+            // await loadPosts();
+            
+            Alert.alert("Success", "Post deleted successfully");
+          } catch (error) {
+            console.error("Delete error:", error);
+            Alert.alert("Error", "Failed to delete post");
           }
         }
-      ]
-    );
-  };
-
-  const handleDeleteImage = async (imageId: string) => {
-    if (!editingPostId) return;
-    
-    try {
-      await deletePostImage(editingPostId, imageId);
-      setExistingImages(prev => prev.filter(img => img.public_id !== imageId));
-      refreshData();
-    } catch (error) {
-      console.error("Delete image error:", error);
-      Alert.alert("Error", "Failed to delete image");
-    }
-  };
-
+      }
+    ]
+  );
+};
   const handleEdit = (post: Post) => {
     setEditingPostId(post._id);
     setTitle(post.title);
     setDescription(post.description);
-    setExistingImages(post.images);
-    setTempImages([]);
+    setTempImages(post.images.map(img => img.url));
     setShowForm(true);
   };
 
@@ -160,31 +314,22 @@ const AddPost: React.FC = () => {
     setTitle("");
     setDescription("");
     setTempImages([]);
-    setExistingImages([]);
     setEditingPostId(null);
     setShowForm(false);
   };
 
   const renderImages = () => (
     <View style={styles.imageGridContainer}>
-      {existingImages.map((image) => (
-        <View key={image.public_id} style={styles.imageContainer}>
-          <Image source={{ uri: image.url }} style={styles.image} />
-          <TouchableOpacity
-            onPress={() => handleDeleteImage(image.public_id)}
-            style={styles.imageDeleteButton}
-          >
-            <MaterialIcons name="delete" size={20} color="white" />
-          </TouchableOpacity>
-        </View>
-      ))}
-      
       {tempImages.map((uri, index) => (
         <View key={`temp-${index}`} style={styles.imageContainer}>
           <Image source={{ uri }} style={styles.image} />
           <TouchableOpacity
             onPress={() => {
               setTempImages(prev => prev.filter((_, i) => i !== index));
+              // get imageId from uri publicId
+              const imageId = uri.split('/').pop()?.split('.')[0];
+
+              handleDeleteImage(imageId || '');
             }}
             style={styles.imageDeleteButton}
           >
@@ -193,7 +338,7 @@ const AddPost: React.FC = () => {
         </View>
       ))}
       
-      {(existingImages.length + tempImages.length) < 5 && (
+      {tempImages.length < 5 && (
         <TouchableOpacity
           onPress={pickImages}
           style={[styles.imageContainer, styles.addImageButton]}
@@ -276,15 +421,15 @@ const AddPost: React.FC = () => {
 
   const renderPosts = () => (
     <View style={styles.postsContainer}>
-      {posts.map((post ) => (
+      {posts.map((post) => (
         <View key={post._id} style={[styles.cardContainer, { backgroundColor: colors.card }]}>
           <View style={styles.cardHeader}>
             <Text style={[styles.cardTitle, { color: colors.text }]}>{post.title}</Text>
             
-            {user?._id === post.postedBy?._id && (
+            {user?._id === post.postedBy._id && (
               <View style={styles.cardActions}>
                 <TouchableOpacity 
-                  onPress={() =>{}}
+                  onPress={() => handleEdit(post)}
                   style={styles.actionButton}
                 >
                   <MaterialCommunityIcons 
@@ -293,6 +438,8 @@ const AddPost: React.FC = () => {
                     color={colors.primary} 
                   />
                 </TouchableOpacity>
+                {/* delete post single image  */}
+
                 <TouchableOpacity 
                   onPress={() => handleDelete(post._id)}
                   style={styles.actionButton}
@@ -331,7 +478,7 @@ const AddPost: React.FC = () => {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
               <TouchableOpacity style={styles.likeButton}>
                 <MaterialCommunityIcons 
-                  name={ "heart-outline"} 
+                  name={"heart-outline"} 
                   size={16} 
                   color={colors.mutedForeground} 
                 />
@@ -383,6 +530,8 @@ const AddPost: React.FC = () => {
     </SafeAreaView>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   container: {

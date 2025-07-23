@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-const db = SQLite.openDatabaseSync('posts.db'); // Using same database
+const db = SQLite.openDatabaseSync('posts.db');
 
 interface PostImage {
   _id: string;
@@ -96,24 +96,43 @@ export const initPostsDatabase = async (): Promise<void> => {
   }
 };
 
-// Download image and convert to blob
-const downloadImageAsBlob = async (url: string): Promise<Uint8Array> => {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to download image: ${response.status}`);
+// Enhanced image download with retry logic
+const downloadImageAsBlob = async (url: string, retries = 3): Promise<Uint8Array> => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(url, {
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const arrayBuffer = await response.arrayBuffer();
+      return new Uint8Array(arrayBuffer);
+    } catch (error) {
+      console.warn(`Image download attempt ${attempt} failed:`, error);
+      
+      if (attempt === retries) {
+        throw new Error(`Failed to download image after ${retries} attempts: ${error}`);
+      }
+      
+      // Wait before retry (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
     }
-    const arrayBuffer = await response.arrayBuffer();
-    return new Uint8Array(arrayBuffer);
-  } catch (error) {
-    console.error('Error downloading image:', error);
-    throw error;
   }
+  
+  throw new Error('Unexpected error in downloadImageAsBlob');
 };
 
 // Save a single post with images
 export const savePost = async (post: Post): Promise<void> => {
-  if (!post._id || !post.title || !post.postedBy) {
+  if (!post._id || !post.title || !post.postedBy?._id) {
     throw new Error('Required post fields are missing');
   }
 
@@ -129,7 +148,7 @@ export const savePost = async (post: Post): Promise<void> => {
       [
         post._id,
         post.title,
-        post.description,
+        post.description || '',
         post.postedBy._id,
         post.postedBy.name,
         post.createdAt,
@@ -142,29 +161,31 @@ export const savePost = async (post: Post): Promise<void> => {
     await db.runAsync('DELETE FROM post_images WHERE postId = ?', [post._id]);
 
     // Download and save images
-    for (const image of post.images) {
-      try {
-        console.log(`Downloading image: ${image.url}`);
-        const imageBlob = await downloadImageAsBlob(image.url);
-        
-        await db.runAsync(
-          `INSERT INTO post_images 
-           (id, postId, imageId, publicId, url, blob)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [
-            `${post._id}_${image._id}`,
-            post._id,
-            image._id,
-            image.public_id,
-            image.url,
-            imageBlob
-          ]
-        );
-        
-        console.log(`Image saved: ${image._id}`);
-      } catch (imageError) {
-        console.warn(`Failed to download image ${image._id}:`, imageError);
-        // Continue with next image even if one fails
+    if (post.images && Array.isArray(post.images)) {
+      for (const image of post.images) {
+        try {
+          console.log(`Downloading image: ${image.url}`);
+          const imageBlob = await downloadImageAsBlob(image.url);
+          
+          await db.runAsync(
+            `INSERT INTO post_images 
+             (id, postId, imageId, publicId, url, blob)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+              `${post._id}_${image._id}`,
+              post._id,
+              image._id,
+              image.public_id,
+              image.url,
+              imageBlob
+            ]
+          );
+          
+          console.log(`Image saved: ${image._id}`);
+        } catch (imageError) {
+          console.warn(`Failed to download image ${image._id}:`, imageError);
+          // Continue with next image even if one fails
+        }
       }
     }
 
@@ -173,7 +194,11 @@ export const savePost = async (post: Post): Promise<void> => {
     console.log(`Post saved: ${post._id}`);
   } catch (error) {
     // Rollback on error
-    await db.execAsync('ROLLBACK');
+    try {
+      await db.execAsync('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Error during rollback:', rollbackError);
+    }
     console.error('Error saving post:', error);
     throw error;
   }
@@ -251,20 +276,76 @@ export const getAllPosts = async (): Promise<Post[]> => {
   }
 };
 
+// Get posts with pagination - FIXED
+export const getPostsPaginated = async (
+  limit: number = 20, 
+  offset: number = 0
+): Promise<{ posts: Post[], hasMore: boolean }> => {
+  try {
+    const posts = await db.getAllAsync<SavedPost>(`
+      SELECT * FROM posts 
+      ORDER BY createdAt DESC
+      LIMIT ? OFFSET ?
+    `, [limit + 1, offset]); // Get one extra to check if there are more
+
+    const hasMore = posts.length > limit;
+    const actualPosts = hasMore ? posts.slice(0, -1) : posts;
+
+    const postsWithImages: Post[] = [];
+    
+    for (const post of actualPosts) {
+      const images = await db.getAllAsync<SavedPostImage>(`
+        SELECT * FROM post_images 
+        WHERE postId = ?
+        ORDER BY imageId
+      `, [post.id]);
+
+      const postImages: PostImage[] = images.map(img => ({
+        _id: img.imageId,
+        public_id: img.publicId,
+        url: img.url
+      }));
+
+      const fullPost: Post = {
+        _id: post.id,
+        title: post.title,
+        description: post.description,
+        postedBy: {
+          _id: post.postedById,
+          name: post.postedByName
+        },
+        images: postImages,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
+        __v: post.v
+      };
+
+      postsWithImages.push(fullPost);
+    }
+
+    return { posts: postsWithImages, hasMore };
+  } catch (error) {
+    console.error('Error getting paginated posts:', error);
+    return { posts: [], hasMore: false };
+  }
+};
+
 // Get a single post by ID
-export const getPost = async (postId: string): Promise<Post | null> => {
+export const getPostById = async (postId: string): Promise<Post | null> => {
   try {
     const post = await db.getFirstAsync<SavedPost>(`
       SELECT * FROM posts WHERE id = ?
     `, [postId]);
 
-    if (!post) return null;
+    if (!post) {
+      return null;
+    }
 
     const images = await db.getAllAsync<SavedPostImage>(`
       SELECT * FROM post_images 
       WHERE postId = ?
       ORDER BY imageId
-    `, [postId]);
+    `, [post.id]);
 
     const postImages: PostImage[] = images.map(img => ({
       _id: img.imageId,
@@ -286,7 +367,7 @@ export const getPost = async (postId: string): Promise<Post | null> => {
       __v: post.v
     };
   } catch (error) {
-    console.error('Error getting post:', error);
+    console.error('Error getting post by ID:', error);
     return null;
   }
 };
@@ -309,10 +390,13 @@ export const getPostImageBlob = async (postId: string, imageId: string): Promise
 // Delete all posts
 export const deleteAllPosts = async (): Promise<void> => {
   try {
+    await db.execAsync('BEGIN TRANSACTION');
     await db.runAsync('DELETE FROM post_images');
     await db.runAsync('DELETE FROM posts');
+    await db.execAsync('COMMIT');
     console.log('All posts deleted');
   } catch (error) {
+    await db.execAsync('ROLLBACK');
     console.error('Error deleting posts:', error);
     throw error;
   }
@@ -321,10 +405,13 @@ export const deleteAllPosts = async (): Promise<void> => {
 // Delete a specific post
 export const deletePost = async (postId: string): Promise<void> => {
   try {
+    await db.execAsync('BEGIN TRANSACTION');
     await db.runAsync('DELETE FROM post_images WHERE postId = ?', [postId]);
     await db.runAsync('DELETE FROM posts WHERE id = ?', [postId]);
+    await db.execAsync('COMMIT');
     console.log(`Post deleted: ${postId}`);
   } catch (error) {
+    await db.execAsync('ROLLBACK');
     console.error('Error deleting post:', error);
     throw error;
   }
@@ -340,5 +427,53 @@ export const getPostsCount = async (): Promise<number> => {
   } catch (error) {
     console.error('Error getting posts count:', error);
     return 0;
+  }
+};
+
+// Search posts by title or description
+export const searchPosts = async (query: string): Promise<Post[]> => {
+  try {
+    const posts = await db.getAllAsync<SavedPost>(`
+      SELECT * FROM posts 
+      WHERE title LIKE ? OR description LIKE ?
+      ORDER BY createdAt DESC
+    `, [`%${query}%`, `%${query}%`]);
+
+    const postsWithImages: Post[] = [];
+    
+    for (const post of posts) {
+      const images = await db.getAllAsync<SavedPostImage>(`
+        SELECT * FROM post_images 
+        WHERE postId = ?
+        ORDER BY imageId
+      `, [post.id]);
+
+      const postImages: PostImage[] = images.map(img => ({
+        _id: img.imageId,
+        public_id: img.publicId,
+        url: img.url
+      }));
+
+      const fullPost: Post = {
+        _id: post.id,
+        title: post.title,
+        description: post.description,
+        postedBy: {
+          _id: post.postedById,
+          name: post.postedByName
+        },
+        images: postImages,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
+        __v: post.v
+      };
+
+      postsWithImages.push(fullPost);
+    }
+
+    return postsWithImages;
+  } catch (error) {
+    console.error('Error searching posts:', error);
+    return [];
   }
 };

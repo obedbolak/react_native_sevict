@@ -47,7 +47,6 @@ const SignupScreen = () => {
 
   const handleRegister = async () => {
     Keyboard.dismiss();
-    const { username, email, password, confirmPassword } = formData;
     try {
       await register(formData.username, formData.email, formData.password);
     } catch (error) {

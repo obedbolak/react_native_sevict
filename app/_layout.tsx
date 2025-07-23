@@ -1,4 +1,5 @@
 import { AuthProvider, useAuth } from '@/context/authContext';
+import { PostsProvider } from '@/context/postContext';
 import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -63,10 +64,12 @@ function ThemedApp() {
 
 export default function RootLayout() {
   return (
-    <CustomThemeProvider> 
+    <CustomThemeProvider>
+      <PostsProvider> 
       <AuthProvider>
         <ThemedApp /> 
       </AuthProvider>
+      </PostsProvider>
     </CustomThemeProvider>
   );
 }

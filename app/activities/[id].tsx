@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/themeContext';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { activities } from '../../db/activityData';
@@ -8,30 +9,45 @@ interface Activity {
     description: string;
     bannerImage: string[];
     category: string;
+    longDescription: string;
+    link?: string;
+    contact?: {
+        email: string;
+        phone: string;
+    };
+    location?: {
+        address: string;
+        city: string;
+        state: string;
+        zip: string;
+    };
 }
 
 const ActivityDetails = () => {
     const { colors } = useTheme();
-    const [currentActivity, setCurrentActivity] = useState<Activity>(activities[0]); // Default to first activity
+    const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const currentActivity = activities[currentActivityIndex];
 
-    // Auto-rotate images for the current activity
+  // Handle image and activity rotation
     useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentImageIndex((prevIndex) => 
-                (prevIndex + 1) % currentActivity.bannerImage.length
-            );
+        const imageInterval = setInterval(() => {
+            setCurrentImageIndex(prev => {
+                // If we've reached the last image, move to next activity
+                if (prev + 1 >= currentActivity.bannerImage.length) {
+                    // Move to next activity (with wrap-around)
+                    setCurrentActivityIndex(prevActivity => 
+                        (prevActivity + 1) % activities.length
+                    );
+                    return 0; // Reset image index for new activity
+                }
+                // Otherwise just go to next image
+                return prev + 1;
+            });
         }, 5000); // Change image every 5 seconds
-        return () => clearInterval(interval);
-    }, [currentActivity.bannerImage.length]);
 
-    // Update the current activity when the route params change
-    useEffect(() => {
-        setInterval(() => {
-         setCurrentActivity(previousActivity => previousActivity === activities[activities.length - 1] ? activities[0] : activities[activities.indexOf(previousActivity) + 1]);
-        }, 30000);
-        
-    }, [currentActivity]);
+        return () => clearInterval(imageInterval);
+    }, [currentActivityIndex, currentActivity.bannerImage.length]);
 
     const styles = StyleSheet.create({
         bannerContainer: {
@@ -76,7 +92,11 @@ const ActivityDetails = () => {
     });
 
     return (
-        <TouchableOpacity style={styles.bannerContainer}>
+        <TouchableOpacity style={styles.bannerContainer} onPress={() => {router.push({
+            pathname: '/activities/[activityDetails]',
+            params: { currentActivity: JSON.stringify(currentActivity)
+             },
+        })}}>
             <ImageBackground
                 source={{ uri: currentActivity.bannerImage[currentImageIndex] }}
                 style={styles.bannerImage}

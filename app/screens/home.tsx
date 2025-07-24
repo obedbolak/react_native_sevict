@@ -2,8 +2,10 @@ import { useTheme } from '@/context/themeContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { ImageBackground, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import AtivityDetails from '../activities/[id]';
+import Workshop from '../workshops/workshop';
+
 
 const Home = () => {
   const { colors } = useTheme();
@@ -338,28 +340,7 @@ const Home = () => {
         </View>
 
         {/* Upcoming Workshops Section */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Upcoming Workshops</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAllText}>View all</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <TouchableOpacity style={styles.workshopCard}>
-            <ImageBackground 
-              source={{ uri: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" }}
-              style={styles.workshopImage}
-              resizeMode="cover"
-            >
-              <View style={styles.workshopOverlay}>
-                <Text style={styles.workshopDate}>JUL 15</Text>
-                <Text style={styles.workshopTitle}>Python for Beginners</Text>
-                <Text style={styles.workshopInstructor}>With Dr. Sarah Chen</Text>
-              </View>
-            </ImageBackground>
-          </TouchableOpacity>
-        </View>
+        <Workshop />
 
         {/* News & Updates Section */}
         <View style={styles.sectionContainer}>

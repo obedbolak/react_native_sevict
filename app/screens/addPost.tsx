@@ -3,6 +3,7 @@ import { usePosts } from "@/context/postContext";
 import { useTheme } from "@/context/themeContext";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import moment from 'moment';
 import React, { useState } from "react";
 import {
   Alert,
@@ -497,7 +498,12 @@ const handleDeleteImage = async(imageId: string) => {
             </View>
             
             <Text style={[styles.postedBy, { color: colors.mutedForeground }]}>
-              Posted by: {post.postedBy?.name || 'Unknown'}
+              {post.postedBy?._id === user?._id ? 'You' : post.postedBy.name || 'Unknown'}
+            </Text>
+            
+            <Text style={[styles.postedBy, { color: colors.mutedForeground }]}>
+             
+              {moment(post.createdAt).format('ddd, MMM D, YYYY [at] h:mm A')}
             </Text>
           </View>
         </View>
@@ -536,7 +542,7 @@ const handleDeleteImage = async(imageId: string) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    
   },
   scrollContainer: {
     paddingBottom: 32,

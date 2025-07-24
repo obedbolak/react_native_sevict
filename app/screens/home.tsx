@@ -1,8 +1,9 @@
 import { useTheme } from '@/context/themeContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ImageBackground, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import AtivityDetails from '../activities/[id]';
 
 const Home = () => {
   const { colors } = useTheme();
@@ -51,45 +52,7 @@ const Home = () => {
       fontSize: 16,
       color: colors.text,
     },
-    bannerContainer: {
-      height: 180,
-      borderRadius: 12,
-      overflow: 'hidden',
-      marginBottom: 25,
-    },
-    bannerImage: {
-      height: '100%',
-      width: '100%',
-      justifyContent: 'center',
-    },
-    bannerOverlay: {
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      padding: 20,
-      height: '100%',
-      justifyContent: 'center',
-    },
-    bannerTitle: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: 'white', // Keep white for banner overlay
-      marginBottom: 5,
-    },
-    bannerSubtitle: {
-      fontSize: 16,
-      color: 'white',
-      marginBottom: 15,
-    },
-    bannerButton: {
-      backgroundColor: colors.primary,
-      paddingVertical: 10,
-      paddingHorizontal: 20,
-      borderRadius: 20,
-      alignSelf: 'flex-start',
-    },
-    bannerButtonText: {
-      color: colors.buttonText,
-      fontWeight: 'bold',
-    },
+
     sectionContainer: {
       backgroundColor: colors.cardBackground,
       borderRadius: 12,
@@ -191,19 +154,7 @@ const Home = () => {
     },
   });
 
- const bannerImage = [
-    "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1350&q=80",
-    
-    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-  ];
-
-  //use timeout to make a carousel effect
-  useEffect(() => {
-      const interval = setInterval(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % bannerImage.length);
-      }, 5000); // Change image every 5 seconds
-      return () => clearInterval(interval);
-    }, []);
+ 
 
   return (
     <View style={styles.contentContainer}>
@@ -227,21 +178,7 @@ const Home = () => {
         </View>
 
         {/* Banner Image with Call-to-Action */}
-        <TouchableOpacity style={styles.bannerContainer}>
-          <ImageBackground
-            source={{ uri: bannerImage[currentIndex] }}
-            style={styles.bannerImage}
-            resizeMode="cover"
-          >
-            <View style={styles.bannerOverlay}>
-              <Text style={styles.bannerTitle}>New Coding Bootcamp</Text>
-              <Text style={styles.bannerSubtitle}>Start your tech career today</Text>
-              <View style={styles.bannerButton}>
-                <Text style={styles.bannerButtonText}>Learn More</Text>
-              </View>
-            </View>
-          </ImageBackground>
-        </TouchableOpacity>
+       <AtivityDetails />
 
         {/* Quick Access Section */}
         <View style={styles.sectionContainer}>

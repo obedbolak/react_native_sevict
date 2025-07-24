@@ -121,6 +121,7 @@ export const programData = [
     id: 'management',
     title: 'Management',
     icon: '📊',
+    
     color: 'bg-green-500',
     description: 'Leadership and organizational management programs',
     programs: [

@@ -1,10 +1,6 @@
-
-
-
-
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -17,26 +13,32 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View
-} from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+  View,
+} from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 // Context
-import { useAuth } from '@/context/authContext';
-import { useTheme } from '../../context/themeContext';
+import { useAuth } from "@/context/authContext";
+import { useTheme } from "../../context/themeContext";
 
 const LoginScreen = () => {
   // Context hooks
   const { isDarkMode, toggleTheme, colors } = useTheme();
-  const { login, isLoading, authError } = useAuth();
-  
+  const { login, isLoading, authError, forgotPassword } = useAuth();
+
   // State
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errorTimeout, setErrorTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
-  const [errorMessage, setErrorMessage] = useState('');
-  
+  const [errorTimeout, setErrorTimeout] = useState<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+  const [forgotPasswordState, setForgotPasswordState] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+
   // Layout hooks
   const insets = useSafeAreaInsets();
 
@@ -52,16 +54,20 @@ const LoginScreen = () => {
     Keyboard.dismiss();
     await login(email, password)
       .then(() => {
-        setEmail('');
-        setPassword('');
+        setEmail("");
+        setPassword("");
       })
-      .catch((error) => {
-        if (errorTimeout) clearTimeout(errorTimeout);
-        setErrorMessage(error.message);
-        setErrorTimeout(setTimeout(() => setErrorMessage(''), 3000));
-      });
-    
-   
+      .catch((error) => {});
+  };
+
+  const handleForgotPassword = () => {
+    setForgotPasswordState(!forgotPasswordState);
+  };
+
+  const handleResetPassword = async () => {
+    Keyboard.dismiss();
+    await forgotPassword(email, password);
+    setForgotPasswordState(false);
   };
 
   // Styles
@@ -79,22 +85,22 @@ const LoginScreen = () => {
     contentContainer: {
       flex: 1,
       paddingHorizontal: 24,
-      justifyContent: 'space-between',
+      justifyContent: "space-between",
     },
     topSection: {
       flex: 1,
-      justifyContent: 'center',
+      justifyContent: "center",
       minHeight: 300, // Minimum height to prevent squashing
     },
     // Logo Section
     logoContainer: {
-      alignItems: 'center',
+      alignItems: "center",
       paddingVertical: 20,
     },
     logo: {
       width: 120,
       height: 120,
-      resizeMode: 'contain',
+      resizeMode: "contain",
     },
     // Form Section
     formContainer: {
@@ -102,11 +108,11 @@ const LoginScreen = () => {
     },
     headerContainer: {
       marginBottom: 32,
-      alignItems: 'center',
+      alignItems: "center",
     },
     title: {
       fontSize: 24,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       color: colors.text,
       marginBottom: 8,
     },
@@ -115,19 +121,19 @@ const LoginScreen = () => {
       color: colors.subtext,
     },
     inputContainer: {
-      width: '100%',
-      flexDirection: 'row',
-      alignItems: 'center',
+      width: "100%",
+      flexDirection: "row",
+      alignItems: "center",
       marginBottom: 16,
-      position: 'relative',
+      position: "relative",
     },
     inputIcon: {
-      position: 'absolute',
+      position: "absolute",
       left: 16,
       zIndex: 1,
     },
     input: {
-      width: '100%',
+      width: "100%",
       height: 50,
       borderWidth: 1,
       borderColor: colors.border,
@@ -139,7 +145,7 @@ const LoginScreen = () => {
       fontSize: 16,
     },
     passwordInput: {
-      width: '100%',
+      width: "100%",
       height: 50,
       borderWidth: 1,
       borderColor: colors.border,
@@ -152,37 +158,39 @@ const LoginScreen = () => {
       fontSize: 16,
     },
     eyeButton: {
-      position: 'absolute',
+      position: "absolute",
       right: 16,
       padding: 10,
     },
     loginButton: {
-      width: '100%',
+      width: "100%",
       height: 50,
       backgroundColor: colors.primary,
       borderRadius: 8,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
       marginTop: 16,
     },
     loginButtonText: {
       color: colors.buttonText,
       fontSize: 18,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     errorContainer: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'center',
+      alignItems: "flex-end",
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 4,
     },
     errorText: {
-      color: colors.error || '#DC2626',
+      color: colors.error || "#DC2626",
       fontSize: 15,
       marginTop: 4,
     },
     // Footer Section - This will stick above keyboard
     footerContainer: {
-      paddingBottom: Platform.OS === 'ios' ? (20 + insets.bottom) : (10 + insets.bottom),
+      paddingBottom:
+        Platform.OS === "ios" ? 20 + insets.bottom : 10 + insets.bottom,
     },
     socialContainer: {
       marginBottom: 24,
@@ -191,22 +199,22 @@ const LoginScreen = () => {
       fontSize: 16,
       color: colors.subtext,
       marginBottom: 16,
-      textAlign: 'center',
+      textAlign: "center",
     },
     socialIconsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
+      flexDirection: "row",
+      justifyContent: "center",
       gap: 24,
     },
     socialIcon: {
       width: 40,
       height: 40,
-      resizeMode: 'contain',
+      resizeMode: "contain",
     },
     signupContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
     },
     signupText: {
       color: colors.text,
@@ -214,17 +222,30 @@ const LoginScreen = () => {
     },
     signupLink: {
       color: colors.primary,
-      fontWeight: '600',
+      fontWeight: "600",
       fontSize: 16,
       marginLeft: 6,
+    },
+    forgotPasswordContainer: {
+      alignItems: "flex-end",
+      marginTop: -8,
+      marginBottom: 6,
+    },
+    forgotPasswordButton: {
+      padding: 8,
+    },
+    forgotPasswordText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: "500",
     },
   });
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         style={styles.keyboardAvoidingContainer}
       >
         <ScrollView
@@ -238,9 +259,9 @@ const LoginScreen = () => {
               <View style={styles.topSection}>
                 {/* Logo Section */}
                 <View style={styles.logoContainer}>
-                  <Image 
-                    source={require("../../assets/images/react-logo.png")} 
-                    style={styles.logo} 
+                  <Image
+                    source={require("../../assets/images/react-logo.png")}
+                    style={styles.logo}
                     accessibilityLabel="App logo"
                   />
                 </View>
@@ -249,25 +270,35 @@ const LoginScreen = () => {
                 <View style={styles.formContainer}>
                   <View style={styles.headerContainer}>
                     <TouchableOpacity onPress={toggleTheme}>
-                      <MaterialIcons 
-                        name={isDarkMode ? "dark-mode" : "light-mode"} 
-                        size={24} 
-                        color={colors.icon} 
-                        accessibilityLabel={isDarkMode ? "Light mode icon" : "Dark mode icon"}
+                      <MaterialIcons
+                        name={isDarkMode ? "dark-mode" : "light-mode"}
+                        size={24}
+                        color={colors.icon}
+                        accessibilityLabel={
+                          isDarkMode ? "Light mode icon" : "Dark mode icon"
+                        }
                       />
                     </TouchableOpacity>
-                    <Text style={styles.title}>Welcome Back!</Text>
-                    <Text style={styles.subtitle}>Sign in to continue with the App</Text>
+                    <Text style={styles.title}>
+                      {forgotPasswordState ? "Reset Password" : "Welcome Back!"}
+                    </Text>
+                    <Text style={styles.subtitle}>
+                      {forgotPasswordState
+                        ? "Enter your email to reset your password"
+                        : "Sign in to continue with the App"}
+                    </Text>
                   </View>
-                  
+
                   {/* Email Input */}
                   <View style={styles.inputContainer}>
-                    <MaterialIcons 
-                      name="email" 
-                      size={20} 
-                      color={colors.icon} 
+                    <MaterialIcons
+                      name="email"
+                      size={20}
+                      color={colors.icon}
                       style={styles.inputIcon}
-                      accessibilityLabel="Email icon"
+                      accessibilityLabel={
+                        forgotPasswordState ? "lock icon" : "Email icon"
+                      }
                     />
                     <TextInput
                       placeholder="Enter Email"
@@ -281,18 +312,22 @@ const LoginScreen = () => {
                       autoComplete="email"
                     />
                   </View>
-                  
+
                   {/* Password Input */}
                   <View style={styles.inputContainer}>
-                    <MaterialIcons 
-                      name="lock" 
-                      size={20} 
-                      color={colors.icon} 
+                    <MaterialIcons
+                      name="lock"
+                      size={20}
+                      color={colors.icon}
                       style={styles.inputIcon}
                       accessibilityLabel="Password icon"
                     />
                     <TextInput
-                      placeholder="Enter Password"
+                      placeholder={
+                        forgotPasswordState
+                          ? "Enter NewPassword"
+                          : "Enter Password"
+                      }
                       secureTextEntry={!showPassword}
                       value={password}
                       onChangeText={setPassword}
@@ -305,35 +340,81 @@ const LoginScreen = () => {
                     <TouchableOpacity
                       onPress={() => setShowPassword(!showPassword)}
                       style={styles.eyeButton}
-                      accessibilityLabel={showPassword ? "Show password" : "Hide password"}
+                      accessibilityLabel={
+                        showPassword ? "Show password" : "Hide password"
+                      }
                     >
-                      <MaterialIcons 
-                        name={showPassword ? "visibility" : "visibility-off"} 
-                        size={20} 
-                        color={colors.icon} 
+                      <MaterialIcons
+                        name={showPassword ? "visibility" : "visibility-off"}
+                        size={20}
+                        color={colors.icon}
                       />
                     </TouchableOpacity>
                   </View>
-                  
+
+                  {forgotPasswordState && (
+                    <View style={styles.inputContainer}>
+                      <MaterialIcons
+                        name="vpn-key"
+                        size={20}
+                        color={colors.icon}
+                        style={styles.inputIcon}
+                        accessibilityLabel="Password icon"
+                      />
+                      <TextInput
+                        placeholder="Comfirm NewPassword"
+                        secureTextEntry={!showPassword}
+                        value={newPassword}
+                        onChangeText={setNewPassword}
+                        style={styles.passwordInput}
+                        autoCapitalize="none"
+                        placeholderTextColor={colors.placeholder}
+                        accessibilityLabel="NewPassword input"
+                      />
+                      <TouchableOpacity
+                        onPress={() => setShowPassword(!showPassword)}
+                        style={styles.eyeButton}
+                        accessibilityLabel={
+                          showPassword ? "Show password" : "Hide password"
+                        }
+                      >
+                        <MaterialIcons
+                          name={showPassword ? "visibility" : "visibility-off"}
+                          size={20}
+                          color={colors.icon}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  <View style={styles.forgotPasswordContainer}>
+                    <TouchableOpacity
+                      onPress={handleForgotPassword}
+                      style={styles.forgotPasswordButton}
+                      accessibilityLabel="Forgot password button"
+                    >
+                      <Text style={styles.forgotPasswordText}>
+                        Forgot Password?
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
                   {authError && (
                     <View style={styles.errorContainer}>
                       <Text style={styles.errorText}>{authError}</Text>
-                      <MaterialIcons 
-                        name="error" 
-                        size={20} 
-                        color={colors.error || '#DC2626'} 
+                      <MaterialIcons
+                        name="person-off"
+                        size={20}
+                        color={colors.error || "#DC2626"}
                       />
                     </View>
                   )}
 
-                  {errorMessage ?  (
-                    <Text style={styles.errorText}>{errorMessage}</Text>
-                  ):(null) }
-                    
-                  
                   {/* Login Button */}
                   <TouchableOpacity
-                    onPress={handleLogin}
+                    onPress={
+                      forgotPasswordState ? handleResetPassword : handleLogin
+                    }
                     style={[styles.loginButton, isLoading && { opacity: 0.7 }]}
                     disabled={isLoading}
                     accessibilityLabel="Login button"
@@ -341,7 +422,15 @@ const LoginScreen = () => {
                     {isLoading ? (
                       <ActivityIndicator color={colors.buttonText} />
                     ) : (
-                      <Text style={styles.loginButtonText}>Login</Text>
+                      <>
+                        {forgotPasswordState ? (
+                          <Text style={styles.loginButtonText}>
+                            Reset Password
+                          </Text>
+                        ) : (
+                          <Text style={styles.loginButtonText}>Login</Text>
+                        )}
+                      </>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -352,28 +441,38 @@ const LoginScreen = () => {
                 <View style={styles.socialContainer}>
                   <Text style={styles.socialText}>Or continue with</Text>
                   <View style={styles.socialIconsContainer}>
-                    <Image 
-                      source={{ uri: "https://img.icons8.com/?size=100&id=17949&format=png&color=000000" }} 
-                      style={styles.socialIcon} 
-                      accessibilityLabel="Google login"
-                    />
-                    <Image 
-                      source={{ uri: "https://img.icons8.com/color/48/000000/facebook-new.png" }} 
-                      style={styles.socialIcon} 
-                      accessibilityLabel="Facebook login"
-                    />
-                    <Image 
-                      source={{ uri: "https://img.icons8.com/?size=100&id=30840&format=png&color=000000" }} 
-                      style={styles.socialIcon} 
-                      accessibilityLabel="Apple login"
-                    />
+                    <TouchableOpacity>
+                      <Image
+                        source={{
+                          uri: "https://img.icons8.com/?size=100&id=17949&format=png&color=000000",
+                        }}
+                        style={styles.socialIcon}
+                        accessibilityLabel="Google login"
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+                      <Image
+                        source={{
+                          uri: "https://img.icons8.com/color/48/000000/facebook-new.png",
+                        }}
+                        style={styles.socialIcon}
+                        accessibilityLabel="Facebook login"
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+                      <Image
+                        source={require("../../assets/images/applelight.png")}
+                        style={styles.socialIcon}
+                        accessibilityLabel="Apple login"
+                      />
+                    </TouchableOpacity>
                   </View>
                 </View>
 
                 <View style={styles.signupContainer}>
                   <Text style={styles.signupText}>Don't have an account?</Text>
-                  <TouchableOpacity 
-                    onPress={() => router.replace('./signup')}
+                  <TouchableOpacity
+                    onPress={() => router.replace("./signup")}
                     accessibilityLabel="Navigate to sign up"
                   >
                     <Text style={styles.signupLink}>Sign up</Text>

@@ -1,94 +1,120 @@
-import { useTheme } from '@/context/themeContext';
-import { FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { FlatList, ImageBackground, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useTheme } from "@/context/themeContext";
+import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import {
+  FlatList,
+  ImageBackground,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { programData } from "../../db/fieldsData";
 
-export default function Search () {
+interface Course {
+  id: string;
+  title: string;
+  category: string;
+  instructor: string;
+  duration: string;
+  level: string;
+  rating: number;
+  students: number;
+  image: string;
+  description: string;
+  field: string;
+  fieldId?: string;
+  programName?: string;
+  // Add any other optional properties that might exist in your courses
+}
+
+export default function Search() {
   const { colors } = useTheme();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [filters, setFilters] = useState({
-    level: 'All',
-    duration: 'All',
-    rating: 'All',
+  const [filters, setFilters] = useState<{
+    level: string;
+    duration: string;
+    rating: string;
+  }>({
+    level: "All",
+    duration: "All",
+    rating: "All",
   });
+  const categories = programData.map((item) => ({
+    id: item.id,
+    title: item.title,
+    icon: item.icon,
+  }));
 
-  // Sample data
-  const categories = [
-    { id: 'web', name: 'Web Development', icon: 'code' },
-    { id: 'mobile', name: 'Mobile Development', icon: 'phone-android' },
-    { id: 'data', name: 'Data Science', icon: 'data-usage' },
-    { id: 'ai', name: 'AI & Machine Learning', icon: 'robot' },
-    { id: 'cyber', name: 'Cyber Security', icon: 'security' },
-    { id: 'cloud', name: 'Cloud Computing', icon: 'cloud' },
-    { id: 'game', name: 'Game Development', icon: 'sports-esports' },
-    { id: 'design', name: 'UI/UX Design', icon: 'design-services' },
-  ];
+  function generateUniqueId() {
+    return Math.random().toString(36).substring(2, 11);
+  }
 
-  const courses = [
-    {
-      id: 1,
-      title: 'Complete Python Bootcamp',
-      category: 'data',
-      instructor: 'Dr. Sarah Chen',
-      duration: '8 weeks',
-      level: 'Beginner',
-      rating: 4.8,
-      students: 1245,
-      image: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-    },
-    {
-      id: 2,
-      title: 'Advanced React Native',
-      category: 'mobile',
-      instructor: 'Mark Johnson',
-      duration: '6 weeks',
-      level: 'Advanced',
-      rating: 4.9,
-      students: 892,
-      image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-    },
-    {
-      id: 3,
-      title: 'Machine Learning Fundamentals',
-      category: 'ai',
-      instructor: 'Prof. Alan Turing',
-      duration: '10 weeks',
-      level: 'Intermediate',
-      rating: 4.7,
-      students: 2103,
-      image: 'https://images.unsplash.com/photo-1504639725590-34d0984388bd?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-    },
-    {
-      id: 4,
-      title: 'Full Stack Web Development',
-      category: 'web',
-      instructor: 'Emily Rodriguez',
-      duration: '12 weeks',
-      level: 'Beginner',
-      rating: 4.6,
-      students: 1567,
-      image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-    },
-  ];
+  const courses: Course[] = programData.flatMap((field) =>
+    field.programs.flatMap(
+      (program) =>
+        program.courses?.map((course): Course => {
+          // Handle case where course might be a string
+          if (typeof course === "string") {
+            return {
+              id: generateUniqueId(), // You'll need to implement this
+              title: course,
+              category: field.id,
+              instructor: "Unknown",
+              duration: "",
+              level: "",
+              rating: 0,
+              students: 0,
+              image: "",
+              description: "",
+              field: field.title,
+              fieldId: field.id,
+              programName: program.name,
+            };
+          }
+          // Otherwise it's already a Course object
+          return {
+            ...course,
+            fieldId: field.id,
+            programName: program.name,
+          };
+        }) || []
+    )
+  );
 
-  const filteredCourses = courses.filter(course => {
+  const filteredCourses = courses.filter((course) => {
     // Filter by search query
-    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
-    
+    const matchesSearch =
+      course.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.instructor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
     // Filter by category
-    const matchesCategory = !selectedCategory || course.category === selectedCategory;
-    
+    const matchesCategory =
+      !selectedCategory || course.category === selectedCategory;
+
     // Filter by additional filters
-    const matchesLevel = filters.level === 'All' || course.level === filters.level;
-    const matchesDuration = filters.duration === 'All' || course.duration.includes(filters.duration);
-    const matchesRating = filters.rating === 'All' || 
-                         (filters.rating === '4+' && course.rating >= 4) ||
-                         (filters.rating === '4.5+' && course.rating >= 4.5);
-    
-    return matchesSearch && matchesCategory && matchesLevel && matchesDuration && matchesRating;
+    const matchesLevel =
+      filters.level === "All" || course.level === filters.level;
+    const matchesDuration =
+      filters.duration === "All" || course.duration.includes(filters.duration);
+    const matchesRating =
+      filters.rating === "All" ||
+      (filters.rating === "4+" && course.rating >= 4) ||
+      (filters.rating === "4.5+" && course.rating >= 4.5);
+
+    return (
+      matchesSearch &&
+      matchesCategory &&
+      matchesLevel &&
+      matchesDuration &&
+      matchesRating
+    );
   });
 
   const styles = StyleSheet.create({
@@ -96,14 +122,13 @@ export default function Search () {
       flex: 1,
       backgroundColor: colors.background,
       paddingBottom: 20,
-      
     },
     searchContainer: {
       marginVertical: 16,
     },
     searchBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       backgroundColor: colors.inputBackground,
       borderRadius: 10,
       paddingHorizontal: 16,
@@ -122,7 +147,7 @@ export default function Search () {
     },
     sectionTitle: {
       fontSize: 18,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       color: colors.text,
       marginBottom: 12,
     },
@@ -131,8 +156,8 @@ export default function Search () {
       paddingHorizontal: 4,
     },
     categoryItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       backgroundColor: colors.sectionBackgroundColor,
       borderRadius: 25,
       paddingHorizontal: 16,
@@ -156,27 +181,27 @@ export default function Search () {
       marginLeft: 8,
       color: colors.subtext,
       fontSize: 14,
-      fontWeight: '500',
+      fontWeight: "500",
     },
     selectedCategoryText: {
       color: colors.buttonText,
     },
     resultsHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
       marginTop: 20,
       marginBottom: 16,
     },
     resultsText: {
       fontSize: 14,
       color: colors.subtext,
-      fontWeight: '500',
+      fontWeight: "500",
     },
     filterText: {
       fontSize: 14,
       color: colors.primary,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     coursesContainer: {
       paddingBottom: 20,
@@ -184,7 +209,7 @@ export default function Search () {
     courseCard: {
       backgroundColor: colors.cardBackground,
       borderRadius: 12,
-      overflow: 'hidden',
+      overflow: "hidden",
       marginBottom: 16,
       elevation: 3,
       shadowColor: colors.text,
@@ -194,17 +219,17 @@ export default function Search () {
     },
     courseImage: {
       height: 150,
-      width: '100%',
+      width: "100%",
     },
     courseImageStyle: {
       borderTopLeftRadius: 12,
       borderTopRightRadius: 12,
     },
     courseLevel: {
-      position: 'absolute',
+      position: "absolute",
       top: 10,
       right: 10,
-      backgroundColor: 'rgba(0,0,0,0.7)',
+      backgroundColor: "rgba(0,0,0,0.7)",
       paddingVertical: 4,
       paddingHorizontal: 8,
       borderRadius: 12,
@@ -212,14 +237,14 @@ export default function Search () {
     courseLevelText: {
       color: colors.buttonText,
       fontSize: 12,
-      fontWeight: '500',
+      fontWeight: "500",
     },
     courseInfo: {
       padding: 16,
     },
     courseTitle: {
       fontSize: 16,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       color: colors.text,
       marginBottom: 4,
     },
@@ -229,12 +254,12 @@ export default function Search () {
       marginBottom: 12,
     },
     courseMeta: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      justifyContent: "space-between",
     },
     courseMetaItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
     },
     courseMetaText: {
       marginLeft: 4,
@@ -244,22 +269,22 @@ export default function Search () {
     // Modal styles
     modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      justifyContent: 'flex-end',
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "flex-end",
     },
     modalContainer: {
       backgroundColor: colors.cardBackground,
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
-      maxHeight: '85%',
+      maxHeight: "85%",
       paddingTop: 20,
       paddingHorizontal: 20,
       paddingBottom: 20,
     },
     modalHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
       marginBottom: 20,
       paddingBottom: 10,
       borderBottomWidth: 1,
@@ -267,7 +292,7 @@ export default function Search () {
     },
     modalTitle: {
       fontSize: 20,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       color: colors.text,
     },
     filterOptions: {
@@ -279,13 +304,13 @@ export default function Search () {
     },
     filterLabel: {
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: "600",
       color: colors.text,
       marginBottom: 14,
     },
     filterButtons: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+      flexDirection: "row",
+      flexWrap: "wrap",
       marginHorizontal: -5,
     },
     filterButton: {
@@ -298,7 +323,7 @@ export default function Search () {
       marginHorizontal: 5,
       marginBottom: 10,
       minWidth: 70,
-      alignItems: 'center',
+      alignItems: "center",
     },
     activeFilter: {
       backgroundColor: colors.primary,
@@ -307,14 +332,14 @@ export default function Search () {
     filterButtonText: {
       color: colors.text,
       fontSize: 14,
-      fontWeight: '500',
+      fontWeight: "500",
     },
     activeFilterText: {
       color: colors.buttonText,
     },
     modalFooter: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      justifyContent: "space-between",
       paddingTop: 20,
       borderTopWidth: 1,
       borderTopColor: colors.border,
@@ -326,13 +351,13 @@ export default function Search () {
       paddingHorizontal: 24,
       flex: 1,
       marginRight: 10,
-      alignItems: 'center',
+      alignItems: "center",
       borderWidth: 1,
       borderColor: colors.inputBorder,
     },
     resetButtonText: {
       color: colors.subtext,
-      fontWeight: '600',
+      fontWeight: "600",
       fontSize: 16,
     },
     applyButton: {
@@ -341,17 +366,17 @@ export default function Search () {
       paddingVertical: 16,
       paddingHorizontal: 24,
       flex: 1,
-      alignItems: 'center',
+      alignItems: "center",
     },
     applyButtonText: {
       color: colors.buttonText,
-      fontWeight: '600',
+      fontWeight: "600",
       fontSize: 16,
     },
   });
 
   return (
-   <View style={styles.container}>
+    <View style={styles.container}>
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
@@ -364,7 +389,11 @@ export default function Search () {
             placeholderTextColor={colors.subtext}
           />
           <TouchableOpacity onPress={() => setShowFilters(true)}>
-            <MaterialIcons name="filter-list" size={24} color={colors.primary} />
+            <MaterialIcons
+              name="filter-list"
+              size={24}
+              color={colors.primary}
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -372,7 +401,7 @@ export default function Search () {
       {/* Main content with FlatList */}
       <FlatList
         data={[]} // Empty data to make FlatList render only the ListHeaderComponent
-        keyExtractor={() => 'header'}
+        keyExtractor={() => "header"}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <>
@@ -381,20 +410,42 @@ export default function Search () {
             <FlatList
               horizontal
               data={categories}
-              keyExtractor={item => item.id}
+              keyExtractor={(item) => item.id}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.categoriesContainer}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={[
                     styles.categoryItem,
-                    selectedCategory === item.id && styles.selectedCategory
+                    selectedCategory === item.id && styles.selectedCategory,
                   ]}
-                  onPress={() => setSelectedCategory(selectedCategory === item.id ? null : item.id)}
+                  onPress={() =>
+                    setSelectedCategory(
+                      selectedCategory === item.id ? null : item.id
+                    )
+                  }
                 >
-                  <MaterialIcons name={item.icon as any} size={24} color={selectedCategory === item.id ? colors.buttonText : colors.primary} />
-                  <Text style={[styles.categoryText, selectedCategory === item.id && styles.selectedCategoryText]}>
-                    {item.name}
+                  <Text
+                    style={[
+                      {
+                        color:
+                          selectedCategory === item.id
+                            ? colors.buttonText
+                            : colors.primary,
+                      },
+                    ]}
+                  >
+                    {item.icon}
+                  </Text>
+
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      selectedCategory === item.id &&
+                        styles.selectedCategoryText,
+                    ]}
+                  >
+                    {item.title}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -404,7 +455,8 @@ export default function Search () {
             {/* Results Count */}
             <View style={styles.resultsHeader}>
               <Text style={styles.resultsText}>
-                {filteredCourses.length} {filteredCourses.length === 1 ? 'course' : 'courses'} found
+                {filteredCourses.length}{" "}
+                {filteredCourses.length === 1 ? "course" : "courses"} found
               </Text>
               <TouchableOpacity onPress={() => setShowFilters(true)}>
                 <Text style={styles.filterText}>Filters</Text>
@@ -418,7 +470,7 @@ export default function Search () {
             {/* Courses List */}
             <FlatList
               data={filteredCourses}
-              keyExtractor={item => item.id.toString()}
+              keyExtractor={(item) => item.id.toString()}
               scrollEnabled={false} // Important to prevent nested scrolling
               contentContainerStyle={styles.coursesContainer}
               renderItem={({ item }) => (
@@ -434,19 +486,33 @@ export default function Search () {
                   </ImageBackground>
                   <View style={styles.courseInfo}>
                     <Text style={styles.courseTitle}>{item.title}</Text>
-                    <Text style={styles.courseInstructor}>By {item.instructor}</Text>
+                    <Text style={styles.courseInstructor}>
+                      By {item.instructor}
+                    </Text>
                     <View style={styles.courseMeta}>
                       <View style={styles.courseMetaItem}>
-                        <MaterialIcons name="access-time" size={16} color={colors.subtext} />
-                        <Text style={styles.courseMetaText}>{item.duration}</Text>
+                        <MaterialIcons
+                          name="access-time"
+                          size={16}
+                          color={colors.subtext}
+                        />
+                        <Text style={styles.courseMetaText}>
+                          {item.duration}
+                        </Text>
                       </View>
                       <View style={styles.courseMetaItem}>
                         <FontAwesome name="star" size={16} color="#ffc107" />
                         <Text style={styles.courseMetaText}>{item.rating}</Text>
                       </View>
                       <View style={styles.courseMetaItem}>
-                        <Ionicons name="people" size={16} color={colors.subtext} />
-                        <Text style={styles.courseMetaText}>{item.students}</Text>
+                        <Ionicons
+                          name="people"
+                          size={16}
+                          color={colors.subtext}
+                        />
+                        <Text style={styles.courseMetaText}>
+                          {item.students}
+                        </Text>
                       </View>
                     </View>
                   </View>
@@ -457,7 +523,7 @@ export default function Search () {
         }
       />
       {/* Filters Modal */}
-       <Modal
+      <Modal
         visible={showFilters}
         animationType="slide"
         transparent={true}
@@ -477,23 +543,27 @@ export default function Search () {
               <View style={styles.filterGroup}>
                 <Text style={styles.filterLabel}>Level</Text>
                 <View style={styles.filterButtons}>
-                  {['All', 'Beginner', 'Intermediate', 'Advanced'].map(level => (
-                    <TouchableOpacity
-                      key={level}
-                      style={[
-                        styles.filterButton,
-                        filters.level === level && styles.activeFilter
-                      ]}
-                      onPress={() => setFilters({...filters, level})}
-                    >
-                      <Text style={[
-                        styles.filterButtonText,
-                        filters.level === level && styles.activeFilterText
-                      ]}>
-                        {level}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                  {["All", "Beginner", "Intermediate", "Advanced"].map(
+                    (level) => (
+                      <TouchableOpacity
+                        key={level}
+                        style={[
+                          styles.filterButton,
+                          filters.level === level && styles.activeFilter,
+                        ]}
+                        onPress={() => setFilters({ ...filters, level })}
+                      >
+                        <Text
+                          style={[
+                            styles.filterButtonText,
+                            filters.level === level && styles.activeFilterText,
+                          ]}
+                        >
+                          {level}
+                        </Text>
+                      </TouchableOpacity>
+                    )
+                  )}
                 </View>
               </View>
 
@@ -501,20 +571,23 @@ export default function Search () {
               <View style={styles.filterGroup}>
                 <Text style={styles.filterLabel}>Duration</Text>
                 <View style={styles.filterButtons}>
-                  {['All', '4', '6', '8', '10', '12'].map(duration => (
+                  {["All", "4", "6", "8", "10", "12"].map((duration) => (
                     <TouchableOpacity
                       key={duration}
                       style={[
                         styles.filterButton,
-                        filters.duration === duration && styles.activeFilter
+                        filters.duration === duration && styles.activeFilter,
                       ]}
-                      onPress={() => setFilters({...filters, duration})}
+                      onPress={() => setFilters({ ...filters, duration })}
                     >
-                      <Text style={[
-                        styles.filterButtonText,
-                        filters.duration === duration && styles.activeFilterText
-                      ]}>
-                        {duration === 'All' ? duration : `${duration} weeks`}
+                      <Text
+                        style={[
+                          styles.filterButtonText,
+                          filters.duration === duration &&
+                            styles.activeFilterText,
+                        ]}
+                      >
+                        {duration === "All" ? duration : `${duration} weeks`}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -525,20 +598,22 @@ export default function Search () {
               <View style={styles.filterGroup}>
                 <Text style={styles.filterLabel}>Rating</Text>
                 <View style={styles.filterButtons}>
-                  {['All', '4+', '4.5+'].map(rating => (
+                  {["All", "4+", "4.5+"].map((rating) => (
                     <TouchableOpacity
                       key={rating}
                       style={[
                         styles.filterButton,
-                        filters.rating === rating && styles.activeFilter
+                        filters.rating === rating && styles.activeFilter,
                       ]}
-                      onPress={() => setFilters({...filters, rating})}
+                      onPress={() => setFilters({ ...filters, rating })}
                     >
-                      <Text style={[
-                        styles.filterButtonText,
-                        filters.rating === rating && styles.activeFilterText
-                      ]}>
-                        {rating === 'All' ? rating : `${rating} ★`}
+                      <Text
+                        style={[
+                          styles.filterButtonText,
+                          filters.rating === rating && styles.activeFilterText,
+                        ]}
+                      >
+                        {rating === "All" ? rating : `${rating} ★`}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -547,17 +622,19 @@ export default function Search () {
             </ScrollView>
 
             <View style={styles.modalFooter}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.resetButton}
-                onPress={() => setFilters({
-                  level: 'All',
-                  duration: 'All',
-                  rating: 'All',
-                })}
+                onPress={() =>
+                  setFilters({
+                    level: "All",
+                    duration: "All",
+                    rating: "All",
+                  })
+                }
               >
                 <Text style={styles.resetButtonText}>Reset Filters</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.applyButton}
                 onPress={() => setShowFilters(false)}
               >
@@ -569,5 +646,4 @@ export default function Search () {
       </Modal>
     </View>
   );
-};
-
+}

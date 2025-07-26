@@ -226,7 +226,13 @@ const Index = React.memo(() => {
   : <Image source={require('../../assets/images/profile.png')} style={styles.profileImage} />
 }
               <View>
-                <Text style={styles.greetingText}>Good morning</Text>
+                <Text style={styles.greetingText}>
+                  {new Date().getHours() < 12 
+                    ? "Good Morning" 
+                    : new Date().getHours() < 18 
+                      ? "Good Afternoon" 
+                      : "Good Evening"}
+                </Text>
                 <Text style={styles.userName}>{user?.name}</Text>
               </View>
             </View>

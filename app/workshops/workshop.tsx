@@ -1,7 +1,9 @@
 import { useTheme } from '@/context/themeContext';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
 import { ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { workshopsData } from '../../db/workShop';
 
 const Workshop = () => {
     const {colors} = useTheme();
@@ -68,21 +70,25 @@ const Workshop = () => {
     <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Upcoming Workshops</Text>
-            <TouchableOpacity onPress={() => router.push('/workshops/lists')}>
+            <TouchableOpacity onPress={() => router.push('/workshops/lists')} style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={styles.viewAllText}>View all</Text>
+              <MaterialCommunityIcons name="chevron-right" size={16} color={colors.primary} />
             </TouchableOpacity>
           </View>
           
-          <TouchableOpacity style={styles.workshopCard}>
+          <TouchableOpacity style={styles.workshopCard} onPress={() => router.push({
+            pathname: '/workshops/[id]',
+            params: { item: JSON.stringify(workshopsData[0]) },
+          })}>
             <ImageBackground 
-              source={{ uri: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" }}
+              source={{ uri: workshopsData[0].link }}
               style={styles.workshopImage}
               resizeMode="cover"
             >
               <View style={styles.workshopOverlay}>
-                <Text style={styles.workshopDate}>JUL 15</Text>
-                <Text style={styles.workshopTitle}>Python for Beginners</Text>
-                <Text style={styles.workshopInstructor}>With Dr. Sarah Chen</Text>
+                <Text style={styles.workshopDate}>{workshopsData[0].date}</Text>
+                <Text style={styles.workshopTitle}>{workshopsData[0].title}</Text>
+                <Text style={styles.workshopInstructor}>with {workshopsData[0].instructor}</Text>
               </View>
             </ImageBackground>
           </TouchableOpacity>

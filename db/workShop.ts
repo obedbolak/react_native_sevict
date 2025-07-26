@@ -14,7 +14,7 @@ export const workshopsData: Workshop[] = [
     { 
         id: 1,
         title: 'Python for Beginners',
-        link: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+        link: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
         instructor: 'Dr. Sarah Chen',
         date: 'JUL 15',
         time: '10:00 AM - 12:00 PM',

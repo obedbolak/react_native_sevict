@@ -1,8 +1,8 @@
 import { useAuth } from "@/context/authContext";
 import { useTheme } from "@/context/themeContext";
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -16,24 +16,29 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
-} from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+} from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const SignupScreen = () => {
   const { register, authError, isLoading } = useAuth();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  
+
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errorTimeout, setErrorTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [errorTimeout, setErrorTimeout] = useState<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   useEffect(() => {
     return () => {
@@ -42,7 +47,7 @@ const SignupScreen = () => {
   }, [errorTimeout]);
 
   const handleInputChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleRegister = async () => {
@@ -68,22 +73,22 @@ const SignupScreen = () => {
     mainContainer: {
       flex: 1,
       paddingHorizontal: 24,
-      justifyContent: 'space-between',
+      justifyContent: "space-between",
     },
     topSection: {
       flex: 1,
-      justifyContent: 'center',
+      justifyContent: "center",
       minHeight: 400, // Minimum height to prevent squashing
     },
     // Logo Section
     logoContainer: {
-      alignItems: 'center',
+      alignItems: "center",
       paddingVertical: 20,
     },
     logo: {
       width: 100,
       height: 100,
-      resizeMode: 'contain',
+      resizeMode: "contain",
     },
     // Form Section
     formContainer: {
@@ -91,11 +96,11 @@ const SignupScreen = () => {
     },
     headerContainer: {
       marginBottom: 24,
-      alignItems: 'center',
+      alignItems: "center",
     },
     title: {
       fontSize: 24,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       color: colors.text,
       marginBottom: 8,
     },
@@ -104,19 +109,19 @@ const SignupScreen = () => {
       color: colors.subtext,
     },
     inputContainer: {
-      width: '100%',
-      flexDirection: 'row',
-      alignItems: 'center',
+      width: "100%",
+      flexDirection: "row",
+      alignItems: "center",
       marginBottom: 16,
-      position: 'relative',
+      position: "relative",
     },
     inputIcon: {
-      position: 'absolute',
+      position: "absolute",
       left: 16,
       zIndex: 1,
     },
     input: {
-      width: '100%',
+      width: "100%",
       height: 50,
       borderWidth: 1,
       borderColor: colors.border,
@@ -129,14 +134,15 @@ const SignupScreen = () => {
       fontSize: 16,
     },
     eyeButton: {
-      position: 'absolute',
+      position: "absolute",
       right: 16,
       padding: 10,
     },
     termsContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       marginVertical: 16,
+      paddingLeft: 16,
     },
     checkbox: {
       width: 24,
@@ -144,8 +150,8 @@ const SignupScreen = () => {
       borderRadius: 4,
       borderWidth: 2,
       borderColor: colors.border,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
       marginRight: 8,
     },
     checkboxChecked: {
@@ -159,15 +165,15 @@ const SignupScreen = () => {
     },
     termsLink: {
       color: colors.primary,
-      textDecorationLine: 'underline',
+      textDecorationLine: "underline",
     },
     registerButton: {
-      width: '100%',
+      width: "100%",
       height: 50,
       backgroundColor: colors.primary,
       borderRadius: 8,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
       marginTop: 8,
     },
     buttonDisabled: {
@@ -176,22 +182,27 @@ const SignupScreen = () => {
     registerButtonText: {
       color: colors.buttonText,
       fontSize: 18,
-      fontWeight: '600',
+      fontWeight: "600",
+    },
+    errorContainer: {
+      alignItems: "flex-end",
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 4,
     },
     errorText: {
-      color: colors.error,
-      fontSize: 14,
-      marginBottom: 8,
-      textAlign: 'center',
+      color: colors.error || "#DC2626",
+      fontSize: 15,
+      marginTop: 4,
     },
     // Footer Section - Will stick above keyboard
     footerContainer: {
-      paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+      paddingBottom: Platform.OS === "ios" ? 20 : 10,
     },
     footerSigninContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
     },
     footerText: {
       color: colors.text,
@@ -199,17 +210,17 @@ const SignupScreen = () => {
     },
     footerLink: {
       color: colors.primary,
-      fontWeight: '600',
+      fontWeight: "600",
       fontSize: 16,
       marginLeft: 6,
     },
   });
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         style={styles.keyboardAvoiding}
       >
         <ScrollView
@@ -223,9 +234,9 @@ const SignupScreen = () => {
               <View style={styles.topSection}>
                 {/* Logo Section */}
                 <View style={styles.logoContainer}>
-                  <Image 
-                    source={require("../../assets/images/react-logo.png")} 
-                    style={styles.logo} 
+                  <Image
+                    source={require("../../assets/images/react-logo.png")}
+                    style={styles.logo}
                     accessibilityLabel="App logo"
                   />
                 </View>
@@ -234,21 +245,25 @@ const SignupScreen = () => {
                 <View style={styles.formContainer}>
                   <View style={styles.headerContainer}>
                     <Text style={styles.title}>Create Account!</Text>
-                    <Text style={styles.subtitle}>Please Create Your Account</Text>
+                    <Text style={styles.subtitle}>
+                      Please Create Your Account
+                    </Text>
                   </View>
 
                   {/* Name Input */}
                   <View style={styles.inputContainer}>
-                    <MaterialIcons 
-                      name="person" 
-                      size={20} 
-                      color={colors.icon} 
+                    <MaterialIcons
+                      name="person"
+                      size={20}
+                      color={colors.icon}
                       style={styles.inputIcon}
                     />
                     <TextInput
                       placeholder="Enter Name"
                       value={formData.username}
-                      onChangeText={(text) => handleInputChange('username', text)}
+                      onChangeText={(text) =>
+                        handleInputChange("username", text)
+                      }
                       style={styles.input}
                       placeholderTextColor={colors.placeholder}
                       accessibilityLabel="Name input"
@@ -258,16 +273,16 @@ const SignupScreen = () => {
 
                   {/* Email Input */}
                   <View style={styles.inputContainer}>
-                    <MaterialIcons 
-                      name="email" 
-                      size={20} 
-                      color={colors.icon} 
+                    <MaterialIcons
+                      name="email"
+                      size={20}
+                      color={colors.icon}
                       style={styles.inputIcon}
                     />
                     <TextInput
                       placeholder="Enter Email"
                       value={formData.email}
-                      onChangeText={(text) => handleInputChange('email', text)}
+                      onChangeText={(text) => handleInputChange("email", text)}
                       style={styles.input}
                       placeholderTextColor={colors.placeholder}
                       keyboardType="email-address"
@@ -279,17 +294,19 @@ const SignupScreen = () => {
 
                   {/* Password Input */}
                   <View style={styles.inputContainer}>
-                    <MaterialIcons 
-                      name="lock" 
-                      size={20} 
-                      color={colors.icon} 
+                    <MaterialIcons
+                      name="lock"
+                      size={20}
+                      color={colors.icon}
                       style={styles.inputIcon}
                     />
                     <TextInput
                       placeholder="Enter Password"
                       secureTextEntry={!showPassword}
                       value={formData.password}
-                      onChangeText={(text) => handleInputChange('password', text)}
+                      onChangeText={(text) =>
+                        handleInputChange("password", text)
+                      }
                       style={styles.input}
                       placeholderTextColor={colors.placeholder}
                       accessibilityLabel="Password input"
@@ -299,29 +316,33 @@ const SignupScreen = () => {
                     <TouchableOpacity
                       onPress={() => setShowPassword(!showPassword)}
                       style={styles.eyeButton}
-                      accessibilityLabel={showPassword ? "Show password" : "Hide password"}
+                      accessibilityLabel={
+                        showPassword ? "Show password" : "Hide password"
+                      }
                     >
-                      <MaterialIcons 
-                        name={showPassword ? "visibility" : "visibility-off"} 
-                        size={20} 
-                        color={colors.icon} 
+                      <MaterialIcons
+                        name={showPassword ? "visibility" : "visibility-off"}
+                        size={20}
+                        color={colors.icon}
                       />
                     </TouchableOpacity>
                   </View>
 
                   {/* Confirm Password Input */}
                   <View style={styles.inputContainer}>
-                    <MaterialIcons 
-                      name="lock" 
-                      size={20} 
-                      color={colors.icon} 
+                    <MaterialIcons
+                      name="lock"
+                      size={20}
+                      color={colors.icon}
                       style={styles.inputIcon}
                     />
                     <TextInput
                       placeholder="Confirm Password"
                       secureTextEntry={!showConfirmPassword}
                       value={formData.confirmPassword}
-                      onChangeText={(text) => handleInputChange('confirmPassword', text)}
+                      onChangeText={(text) =>
+                        handleInputChange("confirmPassword", text)
+                      }
                       style={styles.input}
                       placeholderTextColor={colors.placeholder}
                       accessibilityLabel="Confirm password input"
@@ -329,40 +350,67 @@ const SignupScreen = () => {
                       autoCapitalize="none"
                     />
                     <TouchableOpacity
-                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onPress={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       style={styles.eyeButton}
-                      accessibilityLabel={showConfirmPassword ? "Show password" : "Hide password"}
+                      accessibilityLabel={
+                        showConfirmPassword ? "Show password" : "Hide password"
+                      }
                     >
-                      <MaterialIcons 
-                        name={showConfirmPassword ? "visibility" : "visibility-off"} 
-                        size={20} 
-                        color={colors.icon} 
+                      <MaterialIcons
+                        name={
+                          showConfirmPassword ? "visibility" : "visibility-off"
+                        }
+                        size={20}
+                        color={colors.icon}
                       />
                     </TouchableOpacity>
                   </View>
-                  
-                  {authError && <Text style={styles.errorText}>{authError}</Text>}
 
                   {/* Terms Checkbox */}
                   <View style={styles.termsContainer}>
                     <TouchableOpacity
                       onPress={() => setAcceptTerms(!acceptTerms)}
-                      style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}
-                      accessibilityLabel={acceptTerms ? "Terms accepted" : "Accept terms"}
+                      style={[
+                        styles.checkbox,
+                        acceptTerms && styles.checkboxChecked,
+                      ]}
+                      accessibilityLabel={
+                        acceptTerms ? "Terms accepted" : "Accept terms"
+                      }
                     >
                       {acceptTerms && (
-                        <MaterialIcons name="check" size={16} color={colors.background} />
+                        <MaterialIcons
+                          name="check"
+                          size={16}
+                          color={colors.background}
+                        />
                       )}
                     </TouchableOpacity>
                     <Text style={styles.termsText}>
-                      I accept the <Text style={styles.termsLink}>Terms & Conditions</Text>
+                      I accept the
+                      <Text style={styles.termsLink}>Terms & Conditions</Text>
                     </Text>
                   </View>
+                  {authError && (
+                    <View style={styles.errorContainer}>
+                      <Text style={styles.errorText}>{authError}</Text>
+                      <MaterialIcons
+                        name="person-off"
+                        size={20}
+                        color={colors.error || "#DC2626"}
+                      />
+                    </View>
+                  )}
 
                   {/* Register Button */}
                   <TouchableOpacity
                     onPress={handleRegister}
-                    style={[styles.registerButton, (isLoading || !acceptTerms) && styles.buttonDisabled]}
+                    style={[
+                      styles.registerButton,
+                      (isLoading || !acceptTerms) && styles.buttonDisabled,
+                    ]}
                     disabled={isLoading || !acceptTerms}
                     accessibilityLabel="Register button"
                   >
@@ -378,9 +426,11 @@ const SignupScreen = () => {
               {/* Footer Section - Will stick above keyboard */}
               <View style={styles.footerContainer}>
                 <View style={styles.footerSigninContainer}>
-                  <Text style={styles.footerText}>Already have an account?</Text>
-                  <TouchableOpacity 
-                    onPress={() => router.replace('/(auth)')}
+                  <Text style={styles.footerText}>
+                    Already have an account?
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => router.replace("/(auth)")}
                     accessibilityLabel="Navigate to sign in"
                   >
                     <Text style={styles.footerLink}>Sign In</Text>
